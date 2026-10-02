@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  roleId     Int
+  role       Role     @relation(fields: [roleId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  auditLogs  AuditLog[]
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  users       AdminUser[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  @@id([roleId, permissionId])
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  name        String
+  tagline     String?
+  startDate   DateTime
+  endDate     DateTime
+  venue       String?
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Registration {
+  id            Int      @id @default(autoincrement())
+  uid           String   @unique
+  type          String
+  status        String   @default("Pending")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  answers       RegistrationAnswer[]
+  checkIns      CheckIn[]
+}
+
+model RegistrationField {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  label       String
+  type        String
+  required    Boolean  @default(false)
+  options     String?  // JSON string for select options
+}
+
+model RegistrationAnswer {
+  id                Int      @id @default(autoincrement())
+  registrationId    Int
+  fieldKey          String
+  value             String
+  registration      Registration @relation(fields: [registrationId], references: [id])
+}
+
+model CheckIn {
+  id               Int      @id @default(autoincrement())
+  registrationId   Int
+  staffUserId      Int?
+  checkInTime      DateTime @default(now())
+  registration     Registration @relation(fields: [registrationId], references: [id])
+}
+
+model Speaker {
+  id          Int      @id @default(autoincrement())
+  name        String
+  photoUrl    String?
+  position    String?
+  organization String?
+  country     String?
+  biography   String?
+  sessions    EventSession[]
+}
+
+model Exhibitor {
+  id          Int      @id @default(autoincrement())
+  name        String
+  logoUrl     String?
+  description String?
+  country     String?
+  category    String?
+  boothNumber String?
+  website     String?
+  contactInfo String?
+  socialLinks String?
+  images      String?
+}
+
+model EventSession {
+  id          Int      @id @default(autoincrement())
+  date        DateTime
+  time        String
+  title       String
+  description String?
+  location    String?
+  speakerId   Int?
+  category    String?
+  imageUrl    String?
+  status      String?
+  speaker     Speaker? @relation(fields: [speakerId], references: [id])
+}
+
+model NewsArticle {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  coverImage  String?
+  content     String
+  author      String?
+  category    String?
+  publishedAt DateTime?
+  status      String   @default("Draft")
+}
+
+model Media {
+  id          Int      @id @default(autoincrement())
+  filename    String
+  url         String
+  mimeType    String
+  size        Int
+  createdAt   DateTime @default(now())
+}
+
+model Page {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  sections    PageSection[]
+}
+
+model PageSection {
+  id          Int      @id @default(autoincrement())
+  pageId      Int
+  type        String   // e.g., "hero", "text", "gallery"
+  contentJson String   // JSON storing component data
+  order       Int
+  page        Page @relation(fields: [pageId], references: [id])
+}
+
+model Sponsor {
+  id          Int      @id @default(autoincrement())
+  name        String
+  logoUrl     String?
+  website     String?
+  level       String
+  description String?
+  order       Int?
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  adminUserId Int
+  action      String
+  details     String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id])
+}

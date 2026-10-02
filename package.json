@@ -1,0 +1,12 @@
+{
+  "name": "expo-root",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm -r install",
+    "build:all": "pnpm -r build",
+    "deploy": "pnpm run install:all && pnpm run build:all && vercel --prod"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}
