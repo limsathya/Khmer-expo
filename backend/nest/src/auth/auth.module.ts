@@ -12,10 +12,12 @@ import { ConfigService, ConfigModule } from '@nestjs/config';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET') || 'defaultsecret',
-        signOptions: { expiresIn: '2h' },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>('JWT_SECRET');
+        const expiresIn = config.get<string>('JWT_EXPIRES_IN') ?? '2h';
+        if (!secret) throw new Error('JWT_SECRET is required.');
+        return { secret, signOptions: { expiresIn } };
+      },
     }),
   ],
   providers: [AuthService, JwtStrategy],

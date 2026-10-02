@@ -21,38 +21,30 @@ The project uses **dotenv** for environment configuration and provides a tiny **
 
 ## Setup
 
-1. **Create an `.env` file at the repository root** (see the sample below).  The file is ignored by Git.
-   ```dotenv
-   # Server configuration
-   PORT=3000
-
-   # Database connection (example)
-   DATABASE_URL=postgresql://user:password@localhost:5432/expo
-
-   # Encryption key – 32‑byte base64 string
-   ENCRYPTION_KEY=YOUR_32_BYTE_BASE64_KEY
-
-   # Vite client variables (must be prefixed with VITE_)
-   VITE_API_URL=http://localhost:3000/api
-   VITE_ENCRYPTION_KEY=YOUR_32_BYTE_BASE64_KEY
+1. **Copy the single `.env` file** at the repo root (git-ignored; `.env.example` is the template):
+   ```bash
+   cp .env.example .env
    ```
+   All packages — backend, public frontend, admin frontend — read from this one file. The backend (`@nestjs/config`) is pointed at it via `envFilePath: '../../.env'` in `app.module.ts`; each Vite app uses `envDir: '../..'` in `vite.config.ts` so its `import.meta.env.VITE_*` lookups resolve here too. The backend refuses to boot if `PORT`, `DATABASE_URL`, `JWT_SECRET`, or `ENCRYPTION_KEY` is missing — see `backend/nest/src/config/env.config.ts`.
+
+   Only variables prefixed with `VITE_` are exposed to client code; everything else stays server-side.
 2. Install all workspace dependencies:
    ```bash
-   pnpm install:all   # runs `pnpm install` in each workspace
+   pnpm install:all
    ```
 3. **Database** – if you are using PostgreSQL locally, run migrations:
    ```bash
-   cd backend
+   cd backend/nest
    npx prisma migrate dev --name init
    ```
-   (The backend already reads `DATABASE_URL` from the `.env` file.)
+   `DATABASE_URL` is read by Prisma from the root `.env`.
 
 ## Development
 
 - **Backend**
   ```bash
-  cd backend
-  pnpm run dev   # starts NestJS with hot‑reload
+  cd backend/nest
+  pnpm run start:dev   # NestJS with hot-reload on http://localhost:3000
   ```
 - **Public site**
   ```bash
@@ -65,7 +57,9 @@ The project uses **dotenv** for environment configuration and provides a tiny **
   pnpm run dev   # Vite dev server at http://localhost:5174
   ```
 
-All front‑ends automatically load any `VITE_` variables from the root `.env`.
+Each Vite app reads only the **repo-root** `.env` (configured via
+`envDir: '../..'`). Use `import.meta.env.VITE_*` to read env values in
+client code; non-`VITE_*` keys are invisible to the bundle.
 
 ## Build & Deploy
 
@@ -78,17 +72,27 @@ The `deploy` script expects you to be logged in to Vercel (`vercel login`). It w
 
 ## Encryption Utility (backend)
 
-`backend/src/utils/crypto.ts` exposes two functions:
+`backend/nest/src/utils/crypto.ts` exposes two functions:
 ```ts
 import { encrypt, decrypt } from './utils/crypto';
 
-const secret = encrypt('my‑secret');
+const secret = encrypt('my-secret');
 await prisma.secret.create({ data: { value: secret } });
 
 const stored = await prisma.secret.findUnique({ where: { id: 1 } });
 const plain = decrypt(stored!.value);
 ```
-The helper reads the master key from `process.env.ENCRYPTION_KEY`.
+The helper reads the master key from `process.env.ENCRYPTION_KEY`
+(populated by `backend/nest/.env`).
+
+## Seeding the first admin user
+
+```bash
+node scripts/seedAdmin.js
+```
+The script reads `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and
+`BCRYPT_ROUNDS` from the repo-root `.env` (or the shell). It refuses to
+run if either seed credential is missing.
 
 ## Internationalisation (public site)
 

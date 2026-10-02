@@ -20,4 +20,4 @@ enum Role {
   USER
 }
 
-// Additional models (Registration, Content, Media, AuditLog) can be added later.
+// TODO: add Registration, Content, MediaAsset, AuditLog models. See backend/nest/src/{registration,cms,users} for placeholder controllers.

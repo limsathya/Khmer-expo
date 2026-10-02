@@ -5,16 +5,36 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
-let AuthService = class AuthService {
+const config_1 = require("@nestjs/config");
+let AuthService = AuthService_1 = class AuthService {
+    config;
+    logger = new common_1.Logger(AuthService_1.name);
+    constructor(config) {
+        this.config = config;
+    }
     validateUser(username, password) {
-        return username === 'admin' && password === 'admin';
+        const allowDevLogin = this.config.get('AUTH_ALLOW_DEV_LOGIN') === 'true';
+        const isProduction = this.config.get('NODE_ENV') === 'production';
+        if (allowDevLogin && !isProduction) {
+            const expectedUser = this.config.get('DEV_ADMIN_USERNAME') ?? '';
+            const expectedPass = this.config.get('DEV_ADMIN_PASSWORD') ?? '';
+            this.logger.warn(`Dev-mode login attempt for "${username}".`);
+            return username === expectedUser && password === expectedPass;
+        }
+        this.logger.warn(`Refusing credential check for "${username}".`);
+        throw new common_1.UnauthorizedException('Auth backend not configured.');
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
-    (0, common_1.Injectable)()
+exports.AuthService = AuthService = AuthService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [config_1.ConfigService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -15,13 +15,19 @@ const app_controller_1 = require("./app.controller");
 const registration_module_1 = require("./registration/registration.module");
 const users_module_1 = require("./users/users.module");
 const cms_module_1 = require("./cms/cms.module");
+const env_config_1 = require("./config/env.config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                cache: true,
+                envFilePath: '../../.env',
+                validate: env_config_1.validateEnv,
+            }),
             redis_module_1.RedisModule,
             auth_module_1.AuthModule,
             registration_module_1.RegistrationModule,

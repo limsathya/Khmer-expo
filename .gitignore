@@ -1,1 +1,12 @@
+# Build artefacts and dependency caches
 node_modules
+dist
+.turbo
+.next
+.cache
+*.log
+
+# Local env files — keep .env.example checked in, .env ignored
+.env
+.env.local
+.env.*.local

@@ -8,7 +8,8 @@ import Redis from 'ioredis';
     {
       provide: 'REDIS_CLIENT',
       useFactory: (config: ConfigService) => {
-        const url = config.get('REDIS_URL') || 'redis://localhost:6379';
+        const url = config.get<string>('REDIS_URL');
+        if (!url) throw new Error('REDIS_URL is required.');
         return new Redis(url);
       },
       inject: [ConfigService],

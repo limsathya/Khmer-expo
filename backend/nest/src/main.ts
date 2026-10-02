@@ -8,11 +8,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
-  // security middlewares
   app.use(helmet());
-  app.use(cors({ origin: config.get('CORS_ORIGIN') || '*' }));
+  app.use(cors({ origin: config.get<string>('CORS_ORIGIN') }));
 
-  const port = config.get('PORT') || 4000;
+  const port = Number(config.get<string>('PORT'));
   await app.listen(port);
   console.log(`Backend listening on http://localhost:${port}`);
 }
