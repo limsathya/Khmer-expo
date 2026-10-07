@@ -1,0 +1,304 @@
+'use client';
+
+import { useState } from 'react';
+import { 
+  Calendar, 
+  Plus, 
+  Trash2, 
+  Check, 
+  Clock, 
+  Layers, 
+  Sparkles,
+  ArrowUp,
+  ArrowDown
+} from 'lucide-react';
+import { useSettings } from '@/components/SettingsProvider';
+import { useLanguage } from '@/components/LanguageProvider';
+
+export default function TimelineManager({ showToast }) {
+  const { expoConfig, updateSettings, getTimelineDays } = useSettings();
+  const { t, language } = useLanguage();
+
+  const [days, setDays] = useState(
+    Array.isArray(expoConfig.timelineDays) && expoConfig.timelineDays.length > 0
+      ? expoConfig.timelineDays
+      : [
+          {
+            day: 1,
+            date: '2026-10-12',
+            label: { en: 'Day 1: Oct 12', km: 'ថ្ងៃទី១: ១២ តុលា', zh: '第1天：10月12日' },
+            theme: { en: 'Grand Opening & Keynote Tech', km: 'ពិធីបើកសម្ពោធ និងបច្ចេកវិទ្យាសំខាន់ៗ', zh: '开幕盛典与主旨科技' }
+          },
+          {
+            day: 2,
+            date: '2026-10-13',
+            label: { en: 'Day 2: Oct 13', km: 'ថ្ងៃទី២: ១៣ តុលា', zh: '第2天：10月13日' },
+            theme: { en: 'Innovation Showcase & Contests', km: 'ការបង្ហាញនវានុវត្តន៍ និងការប្រកួតប្រជែង', zh: '创新展示与前沿竞赛' }
+          },
+          {
+            day: 3,
+            date: '2026-10-14',
+            label: { en: 'Day 3: Oct 14', km: 'ថ្ងៃទី៣: ១៤ តុលា', zh: '第3天：10月14日' },
+            theme: { en: 'Cultural Gala & Award Honors', km: 'ពិធីរាត្រីសមោសរសិល្បៈ និងប្រគល់ពានរង្វាន់', zh: '文化盛典与颁奖闭幕' }
+          }
+        ]
+  );
+
+  const [saving, setSaving] = useState(false);
+
+  const handleDayFieldChange = (index, field, lang, value) => {
+    setDays(prev => {
+      const copy = [...prev];
+      if (lang) {
+        copy[index] = {
+          ...copy[index],
+          [field]: {
+            ...(copy[index][field] || {}),
+            [lang]: value
+          }
+        };
+      } else {
+        copy[index] = {
+          ...copy[index],
+          [field]: value
+        };
+      }
+      return copy;
+    });
+  };
+
+  const handleAddDay = () => {
+    const nextDayNum = days.length + 1;
+    const lastDate = days[days.length - 1]?.date || '2026-10-14';
+    const [y, m, d] = lastDate.split('-').map(Number);
+    const nextDateObj = new Date(y, m - 1, d + 1);
+    const nextDateStr = nextDateObj.toISOString().split('T')[0];
+
+    const newDay = {
+      day: nextDayNum,
+      date: nextDateStr,
+      label: {
+        en: `Day ${nextDayNum}: ${nextDateStr.slice(5)}`,
+        km: `ថ្ងៃទី${nextDayNum}`,
+        zh: `第${nextDayNum}天`
+      },
+      theme: {
+        en: 'Special Exhibition & Workshops',
+        km: 'ពិព័រណ៍ពិសេស និងសិក្ខាសាលា',
+        zh: '专题展览与深度工作坊'
+      }
+    };
+    setDays([...days, newDay]);
+  };
+
+  const handleRemoveDay = (index) => {
+    if (days.length <= 1) {
+      alert('Must have at least 1 day in the expo timeline schedule.');
+      return;
+    }
+    setDays(days.filter((_, i) => i !== index));
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const ok = await updateSettings({ timelineDays: days });
+      if (ok) {
+        if (showToast) showToast('Timeline schedule days saved to DB successfully!');
+      } else {
+        if (showToast) showToast('Failed to save timeline schedule', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      if (showToast) showToast('Error saving timeline schedule', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '24px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-main)' }}>
+            {language === 'km' ? 'កាលវិភាគ Timeline & កាលបរិច្ឆេទថ្ងៃនីមួយៗ' : language === 'zh' ? '世博时间线日程与天数配置' : 'Expo Timeline Schedule & Days Manager'}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '4px' }}>
+            {language === 'km' 
+              ? 'កំណត់កាលបរិច្ឆេទនៃថ្ងៃនីមួយៗ (Day 1, Day 2, Day 3), ស្លាកសម្គាល់ពហុភាសា និងប្រធានបទប្រចាំថ្ងៃ។ រក្សាទុកដោយផ្ទាល់ក្នុង Supabase DB។' 
+              : language === 'zh' 
+              ? '自定义每日日期 (YYYY-MM-DD)、多语言展示标签与每日主题亮点，实时保存并在时间线页面动态展示。' 
+              : 'Configure timeline day numbers, dates, multilingual labels, and daily themes in Supabase DB.'}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={handleAddDay}
+            className="btn btn-secondary btn-sm"
+          >
+            <Plus size={14} />
+            <span>{language === 'km' ? '+ បន្ថែមថ្ងៃថ្មី' : language === 'zh' ? '+ 添加新天数' : '+ Add Day'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="btn btn-primary btn-sm"
+            style={{ fontWeight: '700' }}
+          >
+            <Check size={16} />
+            <span>{saving ? 'Saving...' : (language === 'km' ? 'រក្សាទុកកាលវិភាគទៅ DB' : language === 'zh' ? '保存日程至数据库' : 'Save Timeline to DB')}</span>
+          </button>
+        </div>
+      </div>
+
+      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {days.map((dayItem, index) => (
+          <div key={index} className="glass-panel" style={{ padding: '24px', borderLeft: '4px solid var(--primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-subtle)', pb: '12px', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.9rem' }}>
+                  {dayItem.day || index + 1}
+                </div>
+                <div>
+                  <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '1rem' }}>
+                    {dayItem.label?.[language] || dayItem.label?.en || `Day ${dayItem.day || index + 1}`}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                    📅 {dayItem.date}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleRemoveDay(index)}
+                className="btn btn-secondary btn-sm"
+                style={{ color: '#ef4444', padding: '6px 10px' }}
+                title="Remove Day"
+              >
+                <Trash2 size={14} />
+                <span>Remove</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '16px' }}>
+              {/* Date Input */}
+              <div>
+                <label className="form-label">{language === 'km' ? 'កាលបរិច្ឆេទ (YYYY-MM-DD)' : language === 'zh' ? '具体公历日期' : 'Date (YYYY-MM-DD)'}</label>
+                <input
+                  type="date"
+                  required
+                  value={dayItem.date}
+                  onChange={(e) => handleDayFieldChange(index, 'date', null, e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Day Number */}
+              <div>
+                <label className="form-label">{language === 'km' ? 'លំដាប់ថ្ងៃ' : language === 'zh' ? '天数序号' : 'Day Number'}</label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={dayItem.day || index + 1}
+                  onChange={(e) => handleDayFieldChange(index, 'day', null, Number(e.target.value))}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Khmer Label */}
+              <div>
+                <label className="form-label">🇰🇭 {language === 'km' ? 'ស្លាកជាភាសាខ្មែរ' : language === 'zh' ? '高棉语标签' : 'Khmer Label'}</label>
+                <input
+                  type="text"
+                  placeholder="e.g. ថ្ងៃទី១: ១២ តុលា"
+                  value={dayItem.label?.km || ''}
+                  onChange={(e) => handleDayFieldChange(index, 'label', 'km', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* English Label */}
+              <div>
+                <label className="form-label">🇬🇧 English Label</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Day 1: Oct 12"
+                  value={dayItem.label?.en || ''}
+                  onChange={(e) => handleDayFieldChange(index, 'label', 'en', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Chinese Label */}
+              <div>
+                <label className="form-label">🇨🇳 中文标签</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 第1天：10月12日"
+                  value={dayItem.label?.zh || ''}
+                  onChange={(e) => handleDayFieldChange(index, 'label', 'zh', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Khmer Theme */}
+              <div>
+                <label className="form-label">🇰🇭 {language === 'km' ? 'ប្រធានបទប្រចាំថ្ងៃ (ខ្មែរ)' : language === 'zh' ? '高棉语主题' : 'Khmer Theme'}</label>
+                <input
+                  type="text"
+                  placeholder="e.g. ពិធីបើកសម្ពោធ និងបច្ចេកវិទ្យាសំខាន់ៗ"
+                  value={dayItem.theme?.km || ''}
+                  onChange={(e) => handleDayFieldChange(index, 'theme', 'km', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* English Theme */}
+              <div>
+                <label className="form-label">🇬🇧 English Theme</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Grand Opening & Keynote Tech"
+                  value={dayItem.theme?.en || ''}
+                  onChange={(e) => handleDayFieldChange(index, 'theme', 'en', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Chinese Theme */}
+              <div>
+                <label className="form-label">🇨🇳 中文主题亮点</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 开幕盛典与主旨科技"
+                  value={dayItem.theme?.zh || ''}
+                  onChange={(e) => handleDayFieldChange(index, 'theme', 'zh', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn btn-primary"
+            style={{ padding: '12px 24px', fontWeight: '800' }}
+          >
+            <Check size={16} />
+            <span>{saving ? 'Saving...' : (language === 'km' ? 'រក្សាទុកកាលវិភាគថ្ងៃទាំងអស់ទៅ DB' : language === 'zh' ? '保存全部日程天数至数据库' : 'Save All Timeline Days to DB')}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

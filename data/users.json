@@ -1,0 +1,12 @@
+[
+  {
+    "id": "usr-admin",
+    "username": "admin",
+    "passwordHash": "42917319bd1d0ae35efce52055805529f85614de699384397d68453b09d32f6c",
+    "name": "Administrator",
+    "role": "admin",
+    "committee": "Central Committee",
+    "avatar": "👨‍💼",
+    "createdAt": "2026-09-01T00:00:00Z"
+  }
+]

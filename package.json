@@ -1,0 +1,18 @@
+{
+  "name": "expo-week",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.5",
+    "lucide-react": "^1.52.0",
+    "next": "^16.3.8",
+    "pg": "^8.23.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

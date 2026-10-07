@@ -1,0 +1,56 @@
+[
+  {
+    "id": "cat-booth",
+    "key": "booth",
+    "icon": "Layers",
+    "name": {
+      "en": "Exhibition Booth",
+      "km": "ស្តង់និងការតាំងពិព័រណ៍",
+      "zh": "展览展位"
+    },
+    "color": "#0284c7",
+    "emoji": "🎪",
+    "description": {
+      "en": "Exhibition booths, innovation showcases, and corporate tech displays",
+      "km": "ស្តង់តាំងពិព័រណ៍ ការបង្ហាញនវានុវត្តន៍ និងការតាំងបង្ហាញបច្ចេកវិទ្យា",
+      "zh": "展览展位、创新成果展示与企业科技展台"
+    },
+    "defaultSubCommittee": "Subcommittee on Design, Stage/Booth Arrangement, and Booth Management"
+  },
+  {
+    "id": "cat-activity",
+    "key": "activity",
+    "icon": "Compass",
+    "name": {
+      "en": "Interactive Activity",
+      "km": "សកម្មភាពអន្តរកម្ម និងការប្រកួត",
+      "zh": "互动体验活动"
+    },
+    "color": "#9333ea",
+    "emoji": "🎯",
+    "description": {
+      "en": "Hands-on demos, mini-competitions, sports, and participatory challenges",
+      "km": "ការសាកល្បងផ្ទាល់ ការប្រកួតខ្នាតតូច កីឡា និងសកម្មភាពចូលរួម",
+      "zh": "动手体验、小型比赛、体育竞赛与互动挑战"
+    },
+    "defaultSubCommittee": "Subcommittee on Sports Competitions and Folk Games"
+  },
+  {
+    "id": "cat-milestone",
+    "key": "milestone",
+    "icon": "Flag",
+    "name": {
+      "en": "Milestone & Ceremony",
+      "km": "ពិធីសំខាន់ៗ & កម្មវិធីកិត្តិយស",
+      "zh": "重要仪式与里程碑"
+    },
+    "color": "#d97706",
+    "emoji": "🏆",
+    "description": {
+      "en": "Opening ceremony, keynote addresses, VIP delegations, and closing gala",
+      "km": "ពិធីបើកសម្ពោធ បាឋកថាសំខាន់ៗ គណៈប្រតិភូជាន់ខ្ពស់ និងរាត្រីសមោសរបិទ",
+      "zh": "开幕仪式、主旨演讲、贵宾接待与闭幕颁奖盛典"
+    },
+    "defaultSubCommittee": "Subcommittee on Reception and Protocol"
+  }
+]
