@@ -19,23 +19,30 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { committeeId, name, role, avatar, alsoInCentralCommittee, centralCommittee, subCommittee } = body;
+    const committeeId = body.committeeId || body.committee;
+    const memberData = body.member || body;
+    const name = memberData.name?.trim();
+    const role = memberData.role?.trim() || 'Committee Member';
+    const avatar = memberData.avatar?.trim() || '👤';
+    const alsoInCentralCommittee = Boolean(memberData.alsoInCentralCommittee || body.alsoInCentralCommittee);
+    const centralCommittee = memberData.centralCommittee || body.centralCommittee;
+    const subCommittee = memberData.subCommittee || body.subCommittee;
 
     if (!committeeId || !name) {
-      return NextResponse.json({ error: 'committeeId and member name are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Committee and member name are required' }, { status: 400 });
     }
 
     const created = await addMemberToCommitteeInDB(committeeId, {
       name,
-      role: role || 'Committee Member',
-      avatar: avatar || '👤',
+      role,
+      avatar,
       alsoInCentralCommittee,
       centralCommittee,
       subCommittee
     });
 
     if (!created) {
-      return NextResponse.json({ error: 'Committee not found' }, { status: 404 });
+      return NextResponse.json({ error: `Committee "${committeeId}" not found in database` }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, member: created }, { status: 201 });
@@ -48,10 +55,13 @@ export async function POST(request) {
 export async function PATCH(request) {
   try {
     const body = await request.json();
-    const { committeeId, memberId, memberIndex, updates } = body;
+    const committeeId = body.committeeId || body.committee;
+    const memberId = body.memberId ?? body.id;
+    const memberIndex = body.memberIndex;
+    const updates = body.updates || body.member || body;
 
     if (!committeeId || (memberId === undefined && memberIndex === undefined)) {
-      return NextResponse.json({ error: 'committeeId and memberId/memberIndex are required' }, { status: 400 });
+      return NextResponse.json({ error: 'committeeId and member identifier are required' }, { status: 400 });
     }
 
     const updated = await updateMemberInCommitteeInDB(committeeId, memberId ?? memberIndex, updates);
@@ -68,14 +78,27 @@ export async function PATCH(request) {
 
 export async function DELETE(request) {
   try {
+    let committeeId = null;
+    let memberId = null;
+    let memberIndex = null;
+
     const { searchParams } = new URL(request.url);
-    const committeeId = searchParams.get('committeeId');
-    const memberId = searchParams.get('memberId');
-    const memberIndexParam = searchParams.get('memberIndex');
-    const memberIndex = memberIndexParam !== null ? Number(memberIndexParam) : null;
+    if (searchParams.get('committeeId')) {
+      committeeId = searchParams.get('committeeId');
+      memberId = searchParams.get('memberId');
+      const idx = searchParams.get('memberIndex');
+      if (idx !== null) memberIndex = Number(idx);
+    } else {
+      try {
+        const body = await request.json();
+        committeeId = body.committeeId || body.committee;
+        memberId = body.memberId ?? body.id ?? body.name;
+        if (body.memberIndex !== undefined) memberIndex = Number(body.memberIndex);
+      } catch (_) {}
+    }
 
     if (!committeeId || (memberId === null && memberIndex === null)) {
-      return NextResponse.json({ error: 'committeeId and memberId or memberIndex required' }, { status: 400 });
+      return NextResponse.json({ error: 'committeeId and member identifier required' }, { status: 400 });
     }
 
     const success = await deleteMemberFromCommitteeInDB(committeeId, memberId ?? memberIndex);

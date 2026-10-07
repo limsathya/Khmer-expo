@@ -88,12 +88,14 @@ export default function MembersManager({ showToast }) {
 
     try {
       if (editingMember) {
+        const commId = editingMember.committeeId || editingMember.committeeKey || editingMember.committee;
         const res = await fetch('/api/committees/members', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            committeeId: editingMember.committee,
+            committeeId: commId,
             memberId: editingMember.id || editingMember.name,
+            memberIndex: editingMember.memberIndex,
             updates: {
               name: formData.name,
               role: formData.role,
@@ -108,7 +110,8 @@ export default function MembersManager({ showToast }) {
           setIsModalOpen(false);
           await loadMembers();
         } else {
-          if (showToast) showToast('Failed to update member', 'error');
+          const errData = await res.json().catch(() => ({}));
+          if (showToast) showToast(errData.error || 'Failed to update member', 'error');
         }
       } else {
         const res = await fetch('/api/committees/members', {
@@ -116,12 +119,10 @@ export default function MembersManager({ showToast }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             committeeId: formData.committee,
-            member: {
-              name: formData.name,
-              role: formData.role,
-              avatar: formData.avatar,
-              alsoInCentralCommittee: formData.alsoInCentralCommittee
-            }
+            name: formData.name,
+            role: formData.role,
+            avatar: formData.avatar,
+            alsoInCentralCommittee: formData.alsoInCentralCommittee
           })
         });
 
@@ -130,7 +131,8 @@ export default function MembersManager({ showToast }) {
           setIsModalOpen(false);
           await loadMembers();
         } else {
-          if (showToast) showToast('Failed to add member', 'error');
+          const errData = await res.json().catch(() => ({}));
+          if (showToast) showToast(errData.error || 'Failed to add member', 'error');
         }
       }
     } catch (err) {
@@ -144,12 +146,14 @@ export default function MembersManager({ showToast }) {
   const handleDeleteMember = async (mem) => {
     if (!confirm(`Are you sure you want to remove ${mem.name} from this committee?`)) return;
     try {
+      const commId = mem.committeeId || mem.committeeKey || mem.committee;
       const res = await fetch('/api/committees/members', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          committeeId: mem.committee,
-          memberId: mem.id || mem.name
+          committeeId: commId,
+          memberId: mem.id || mem.name,
+          memberIndex: mem.memberIndex
         })
       });
 
@@ -157,7 +161,8 @@ export default function MembersManager({ showToast }) {
         if (showToast) showToast(`Removed ${mem.name} from committee.`);
         await loadMembers();
       } else {
-        if (showToast) showToast('Failed to remove member', 'error');
+        const errData = await res.json().catch(() => ({}));
+        if (showToast) showToast(errData.error || 'Failed to remove member', 'error');
       }
     } catch (err) {
       console.error(err);
