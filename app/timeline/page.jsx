@@ -33,6 +33,25 @@ export default function TimelinePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalEvent, setActiveModalEvent] = useState(null);
 
+  const formatTimeString = (time, endTime) => {
+    if (!time) return '';
+    const to12h = (tStr) => {
+      if (!tStr) return '';
+      const [hStr, mStr] = tStr.split(':');
+      let h = parseInt(hStr, 10);
+      if (isNaN(h)) return tStr;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${mStr || '00'} ${ampm}`;
+    };
+    const s12 = to12h(time);
+    const e12 = to12h(endTime);
+    if (endTime) {
+      return `${time} – ${endTime} (${s12} – ${e12})`;
+    }
+    return `${time} (${s12})`;
+  };
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -376,7 +395,7 @@ export default function TimelinePage() {
                           border: '1px solid var(--border-subtle)'
                         }}>
                           <Clock size={15} color="var(--primary)" />
-                          <span>{event.time} – {event.endTime}</span>
+                          <span>{formatTimeString(event.time, event.endTime)}</span>
                         </div>
 
                         <span
@@ -502,7 +521,7 @@ export default function TimelinePage() {
               <div>
                 <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: '700' }}>{t('timeline.detailsModal.schedule')}</div>
                 <div style={{ color: 'var(--text-main)', fontWeight: '600', marginTop: '2px' }}>
-                  {activeModalEvent.date} ({activeModalEvent.time} – {activeModalEvent.endTime})
+                  {activeModalEvent.date} • {formatTimeString(activeModalEvent.time, activeModalEvent.endTime)}
                 </div>
               </div>
               <div>
