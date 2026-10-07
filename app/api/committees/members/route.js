@@ -48,6 +48,7 @@ export async function POST(request) {
       name,
       role,
       avatar,
+      workingGroup: memberData.workingGroup || body.workingGroup || '',
       alsoInCentralCommittee,
       centralCommittee,
       subCommittee

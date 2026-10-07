@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { useLanguage } from '@/components/LanguageProvider';
-import { ALL_COMMITTEES_LIST, getSubCommitteeLocalizedName, localizeOfficeRole, COMMITTEE_STANDARD_PROVISION, OFFICIAL_OFFICE_TITLES } from '@/lib/committees';
+import { ALL_COMMITTEES_LIST, getSubCommitteeLocalizedName, localizeOfficeRole, COMMITTEE_STANDARD_PROVISION, OFFICIAL_OFFICE_TITLES, getWorkingGroupsForCommittee, getWorkingGroupLocalizedName } from '@/lib/committees';
 
 export default function MembersManager({ showToast }) {
   const { user, canManageEverything, userCommittee } = useAuth();
@@ -43,6 +43,7 @@ export default function MembersManager({ showToast }) {
     role: 'Member',
     avatar: '👤',
     committee: 'Subcommittee on Reception and Protocol',
+    workingGroup: '',
     alsoInCentralCommittee: false
   });
   const [saving, setSaving] = useState(false);
@@ -52,6 +53,7 @@ export default function MembersManager({ showToast }) {
   const [bulkFormData, setBulkFormData] = useState({
     committee: 'Subcommittee on Reception and Protocol',
     role: 'Member',
+    workingGroup: '',
     namesText: '',
     avatar: '👤',
     alsoInCentralCommittee: false
@@ -84,6 +86,7 @@ export default function MembersManager({ showToast }) {
       role: 'Member',
       avatar: '👤',
       committee: userCommittee && userCommittee !== 'Central Committee' ? userCommittee : 'Subcommittee on Reception and Protocol',
+      workingGroup: '',
       alsoInCentralCommittee: false
     });
     setIsModalOpen(true);
@@ -93,6 +96,7 @@ export default function MembersManager({ showToast }) {
     setBulkFormData({
       committee: userCommittee && userCommittee !== 'Central Committee' ? userCommittee : (selectedCommittee !== 'all' ? selectedCommittee : 'Subcommittee on Reception and Protocol'),
       role: 'Member',
+      workingGroup: '',
       namesText: '',
       avatar: '👤',
       alsoInCentralCommittee: false
@@ -107,6 +111,7 @@ export default function MembersManager({ showToast }) {
       role: mem.role,
       avatar: mem.avatar || '👤',
       committee: mem.committee || mem.committeeName || mem.committeeKey,
+      workingGroup: mem.workingGroup || mem.team || '',
       alsoInCentralCommittee: !!(mem.centralCommittee || mem.alsoInCentralCommittee || mem.subCommittee)
     });
     setIsModalOpen(true);
@@ -130,6 +135,7 @@ export default function MembersManager({ showToast }) {
               name: formData.name,
               role: formData.role,
               avatar: formData.avatar,
+              workingGroup: formData.workingGroup,
               alsoInCentralCommittee: formData.alsoInCentralCommittee
             }
           })
@@ -152,6 +158,7 @@ export default function MembersManager({ showToast }) {
             name: formData.name,
             role: formData.role,
             avatar: formData.avatar,
+            workingGroup: formData.workingGroup,
             alsoInCentralCommittee: formData.alsoInCentralCommittee
           })
         });
@@ -192,8 +199,9 @@ export default function MembersManager({ showToast }) {
         committeeId: bulkFormData.committee,
         members: parsedNames.map(name => ({
           name,
-          role: bulkFormData.role || 'Committee Member',
+          role: bulkFormData.role || 'Member',
           avatar: bulkFormData.avatar || '👤',
+          workingGroup: bulkFormData.workingGroup || '',
           alsoInCentralCommittee: bulkFormData.alsoInCentralCommittee
         }))
       };
@@ -494,9 +502,16 @@ export default function MembersManager({ showToast }) {
                       })()}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: '600' }}>
-                        {getSubCommitteeLocalizedName(mem.committee || mem.committeeName || mem.committeeKey, language)}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: '600' }}>
+                          {getSubCommitteeLocalizedName(mem.committee || mem.committeeName || mem.committeeKey, language)}
+                        </span>
+                        {mem.workingGroup && (
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <span>🏢</span> {mem.workingGroup}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       {isCross ? (
@@ -604,6 +619,23 @@ export default function MembersManager({ showToast }) {
                     }}>
                       {getSubCommitteeLocalizedName(mem.committee || mem.committeeName || mem.committeeKey, language)}
                     </span>
+
+                    {mem.workingGroup && (
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontSize: '0.72rem',
+                        fontWeight: '600',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#10b981',
+                        border: '1px solid rgba(16, 185, 129, 0.25)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px'
+                      }}>
+                        <span>🏢</span> {mem.workingGroup}
+                      </span>
+                    )}
 
                     {isCross && (
                       <span style={{
@@ -763,6 +795,24 @@ export default function MembersManager({ showToast }) {
               </div>
 
               <div>
+                <label className="form-label">{language === 'km' ? 'ក្រុមការងារឯកទេស (Working Squad)' : language === 'zh' ? '职能工作组 (Working Squad)' : 'Working Group / Squad'}</label>
+                <select
+                  value={formData.workingGroup}
+                  onChange={(e) => setFormData(prev => ({ ...prev, workingGroup: e.target.value }))}
+                  className="form-input"
+                >
+                  <option value="">
+                    {language === 'km' ? '-- ក្រុមការងារទូទៅ (General Squad) --' : language === 'zh' ? '-- 通用/未分组 (General Squad) --' : '-- General / Unassigned Squad --'}
+                  </option>
+                  {getWorkingGroupsForCommittee(formData.committee, language).map(g => (
+                    <option key={g.key} value={g.name}>
+                      {g.icon} {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="form-label">{language === 'km' ? 'រូបតំណាង Avatar Emoji' : language === 'zh' ? '头像图标 Emoji' : 'Avatar Emoji'}</label>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input
@@ -888,6 +938,24 @@ export default function MembersManager({ showToast }) {
                     </option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="form-label">{language === 'km' ? 'ក្រុមការងារឯកទេស (Working Squad)' : language === 'zh' ? '批量指派工作组 (Working Squad)' : 'Assign to Working Squad'}</label>
+                <select
+                  value={bulkFormData.workingGroup}
+                  onChange={(e) => setBulkFormData(prev => ({ ...prev, workingGroup: e.target.value }))}
+                  className="form-input"
+                >
+                  <option value="">
+                    {language === 'km' ? '-- ក្រុមការងារទូទៅ (General Squad) --' : language === 'zh' ? '-- 通用/未指定 (General Squad) --' : '-- General / Unassigned Squad --'}
+                  </option>
+                  {getWorkingGroupsForCommittee(bulkFormData.committee, language).map(g => (
+                    <option key={g.key} value={g.name}>
+                      {g.icon} {g.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
