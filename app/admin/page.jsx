@@ -65,6 +65,25 @@ export default function AdminDashboardPage() {
   const { t, language } = useLanguage();
   const { categories, getCategoryMeta, getCategoryName } = useSettings();
 
+  const formatTimeString = (time, endTime) => {
+    if (!time) return '';
+    const to12h = (tStr) => {
+      if (!tStr) return '';
+      const [hStr, mStr] = tStr.split(':');
+      let h = parseInt(hStr, 10);
+      if (isNaN(h)) return tStr;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${mStr || '00'} ${ampm}`;
+    };
+    const s12 = to12h(time);
+    const e12 = to12h(endTime);
+    if (endTime) {
+      return `${time} – ${endTime} (${s12} – ${e12})`;
+    }
+    return `${time} (${s12})`;
+  };
+
   // Active Section Tab & Sidebar State
   const [activeSection, setActiveSection] = useState('events');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -1215,7 +1234,7 @@ export default function AdminDashboardPage() {
                             <Calendar size={13} color="var(--primary)" />
                             <span>{event.date}</span>
                             <span style={{ color: 'var(--text-dim)' }}>•</span>
-                            <span>{event.time} – {event.endTime}</span>
+                            <span>{formatTimeString(event.time, event.endTime)}</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                             <MapPin size={13} color="#06b6d4" />
@@ -1393,7 +1412,7 @@ export default function AdminDashboardPage() {
                       <div style={{ background: 'var(--btn-secondary-bg)', padding: '12px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', marginBottom: '16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-main)' }}>
                           <Calendar size={13} color="var(--primary)" />
-                          <span>{event.date} • {event.time} – {event.endTime}</span>
+                          <span>{event.date} • {formatTimeString(event.time, event.endTime)}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
                           <MapPin size={13} color="#06b6d4" />
@@ -2207,7 +2226,7 @@ export default function AdminDashboardPage() {
                   {t('timeline.detailsModal.schedule', 'Schedule')}
                 </div>
                 <div style={{ color: 'var(--text-main)', fontWeight: '600', marginTop: '2px' }}>
-                  {previewEvent.date} ({previewEvent.time} – {previewEvent.endTime})
+                  {previewEvent.date} • {formatTimeString(previewEvent.time, previewEvent.endTime)}
                 </div>
               </div>
               <div>
