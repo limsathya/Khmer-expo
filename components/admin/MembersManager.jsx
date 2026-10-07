@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { useLanguage } from '@/components/LanguageProvider';
-import { ALL_COMMITTEES_LIST, getSubCommitteeLocalizedName } from '@/lib/committees';
+import { ALL_COMMITTEES_LIST, getSubCommitteeLocalizedName, localizeOfficeRole, COMMITTEE_STANDARD_PROVISION, OFFICIAL_OFFICE_TITLES } from '@/lib/committees';
 
 export default function MembersManager({ showToast }) {
   const { user, canManageEverything, userCommittee } = useAuth();
@@ -40,7 +40,7 @@ export default function MembersManager({ showToast }) {
   const [editingMember, setEditingMember] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    role: 'Committee Member',
+    role: 'Member',
     avatar: '👤',
     committee: 'Subcommittee on Reception and Protocol',
     alsoInCentralCommittee: false
@@ -51,7 +51,7 @@ export default function MembersManager({ showToast }) {
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [bulkFormData, setBulkFormData] = useState({
     committee: 'Subcommittee on Reception and Protocol',
-    role: 'Committee Member',
+    role: 'Member',
     namesText: '',
     avatar: '👤',
     alsoInCentralCommittee: false
@@ -81,7 +81,7 @@ export default function MembersManager({ showToast }) {
     setEditingMember(null);
     setFormData({
       name: '',
-      role: 'Committee Member',
+      role: 'Member',
       avatar: '👤',
       committee: userCommittee && userCommittee !== 'Central Committee' ? userCommittee : 'Subcommittee on Reception and Protocol',
       alsoInCentralCommittee: false
@@ -92,7 +92,7 @@ export default function MembersManager({ showToast }) {
   const openBulkModal = () => {
     setBulkFormData({
       committee: userCommittee && userCommittee !== 'Central Committee' ? userCommittee : (selectedCommittee !== 'all' ? selectedCommittee : 'Subcommittee on Reception and Protocol'),
-      role: 'Committee Member',
+      role: 'Member',
       namesText: '',
       avatar: '👤',
       alsoInCentralCommittee: false
@@ -299,7 +299,25 @@ export default function MembersManager({ showToast }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {/* Official Standard Provision Banner */}
+        <div style={{
+          width: '100%',
+          padding: '10px 16px',
+          borderRadius: '10px',
+          background: 'rgba(99, 102, 241, 0.08)',
+          border: '1px solid rgba(99, 102, 241, 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          color: 'var(--text-main)',
+          fontSize: '0.825rem',
+          fontWeight: '700'
+        }}>
+          <ShieldCheck size={16} color="var(--primary)" style={{ flexShrink: 0 }} />
+          <span>{COMMITTEE_STANDARD_PROVISION[language] || COMMITTEE_STANDARD_PROVISION.en}</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%', justifyContent: 'flex-end' }}>
           <button onClick={openBulkModal} className="btn btn-secondary btn-sm" title="Bulk Import Multiple Members">
             <UploadCloud size={14} />
             <span>{language === 'km' ? '+ បញ្ចូលច្រើននាក់ (Bulk)' : language === 'zh' ? '+ 批量导入' : '+ Bulk Import'}</span>
@@ -450,8 +468,30 @@ export default function MembersManager({ showToast }) {
                         <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{mem.name}</span>
                       </div>
                     </td>
-                    <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>
-                      {mem.role || 'Member'}
+                    <td style={{ padding: '12px 16px' }}>
+                      {(() => {
+                        const isMain = mem.committee === 'Central Committee' || mem.committee === 'main-committee';
+                        const locRole = localizeOfficeRole(mem.role, isMain, language);
+                        const rLower = (mem.role || '').toLowerCase();
+                        const isCoPres = rLower.includes('co-pres') || rLower.includes('copres') || rLower.includes('co pres') || rLower.includes('សហប្រធាន') || rLower.includes('共同主席');
+                        const isPres = !isCoPres && (rLower.includes('presid') || rLower.includes('chair') || rLower.includes('lead') || rLower.includes('ប្រធាន') || rLower.includes('主席'));
+
+                        if (isCoPres) {
+                          return (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: '800', color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '2px 8px', borderRadius: '6px' }}>
+                              ⭐ {locRole}
+                            </span>
+                          );
+                        }
+                        if (isPres) {
+                          return (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: '6px' }}>
+                              👑 {locRole}
+                            </span>
+                          );
+                        }
+                        return <span style={{ color: 'var(--text-muted)' }}>{locRole}</span>;
+                      })()}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: '600' }}>
@@ -513,8 +553,30 @@ export default function MembersManager({ showToast }) {
                         <div style={{ fontWeight: '800', fontSize: '1.05rem', color: 'var(--text-main)' }}>
                           {mem.name}
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '2px' }}>
-                          {mem.role}
+                        <div style={{ marginTop: '3px' }}>
+                          {(() => {
+                            const isMain = mem.committee === 'Central Committee' || mem.committee === 'main-committee';
+                            const locRole = localizeOfficeRole(mem.role, isMain, language);
+                            const rLower = (mem.role || '').toLowerCase();
+                            const isCoPres = rLower.includes('co-pres') || rLower.includes('copres') || rLower.includes('co pres') || rLower.includes('សហប្រធាន') || rLower.includes('共同主席');
+                            const isPres = !isCoPres && (rLower.includes('presid') || rLower.includes('chair') || rLower.includes('lead') || rLower.includes('ប្រធាន') || rLower.includes('主席'));
+
+                            if (isCoPres) {
+                              return (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: '800', color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '2px 8px', borderRadius: '6px' }}>
+                                  ⭐ {locRole}
+                                </span>
+                              );
+                            }
+                            if (isPres) {
+                              return (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: '6px' }}>
+                                  👑 {locRole}
+                                </span>
+                              );
+                            }
+                            return <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{locRole}</span>;
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -631,11 +693,53 @@ export default function MembersManager({ showToast }) {
               </div>
 
               <div>
-                <label className="form-label">{language === 'km' ? 'មុខតំណែង / តួនាទី' : language === 'zh' ? '担任职务 / 职位' : 'Role / Position'}</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>{language === 'km' ? 'មុខតំណែង / តួនាទី' : language === 'zh' ? '担任职务 / 职位' : 'Role / Position'}</label>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    {language === 'km' ? 'តួនាទីផ្លូវការ ៣ កម្រិត' : language === 'zh' ? '官方统一职务' : 'Official Titles'}
+                  </span>
+                </div>
+
+                {/* 3 Standard Office Titles Quick Buttons */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginBottom: '8px' }}>
+                  {[
+                    { key: 'Member', labelKm: 'សមាជិក', labelZh: '委员', labelEn: 'Member', icon: '👤' },
+                    { key: 'Co-President', labelKm: 'សហប្រធាន', labelZh: '共同主席', labelEn: 'Co-President', icon: '⭐' },
+                    { key: 'President', labelKm: 'ប្រធាន', labelZh: '主席', labelEn: 'President', icon: '👑' },
+                  ].map((item) => {
+                    const isSelected = formData.role.toLowerCase() === item.key.toLowerCase();
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, role: item.key }))}
+                        style={{
+                          padding: '6px 8px',
+                          fontSize: '0.78rem',
+                          fontWeight: '600',
+                          borderRadius: '8px',
+                          border: isSelected ? '1.5px solid var(--primary)' : '1px solid var(--border-subtle)',
+                          background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'var(--card-bg)',
+                          color: isSelected ? 'var(--primary)' : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <span>{item.icon}</span>
+                        <span>{language === 'km' ? item.labelKm : language === 'zh' ? item.labelZh : item.labelEn}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Protocol Lead, Member, Coordinator..."
+                  placeholder="e.g. Member, Co-President, President..."
                   value={formData.role}
                   onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                   className="form-input"
@@ -768,13 +872,21 @@ export default function MembersManager({ showToast }) {
 
                 <div>
                   <label className="form-label">{language === 'km' ? 'តួនាទីរួម' : language === 'zh' ? '默认职务' : 'Default Role'}</label>
-                  <input
-                    type="text"
+                  <select
                     value={bulkFormData.role}
                     onChange={(e) => setBulkFormData(prev => ({ ...prev, role: e.target.value }))}
-                    placeholder="e.g. Volunteer, Member"
                     className="form-input"
-                  />
+                  >
+                    <option value="Member">
+                      {language === 'km' ? '👤 សមាជិក (Member)' : language === 'zh' ? '👤 委员 (Member)' : '👤 Member'}
+                    </option>
+                    <option value="Co-President">
+                      {language === 'km' ? '⭐ សហប្រធាន (Co-President)' : language === 'zh' ? '⭐ 共同主席 (Co-President)' : '⭐ Co-President'}
+                    </option>
+                    <option value="President">
+                      {language === 'km' ? '👑 ប្រធាន (President)' : language === 'zh' ? '👑 主席 (President)' : '👑 President'}
+                    </option>
+                  </select>
                 </div>
               </div>
 

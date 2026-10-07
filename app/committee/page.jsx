@@ -15,7 +15,13 @@ import {
   Award,
   RefreshCw
 } from 'lucide-react';
-import { MAIN_COMMITTEE as FALLBACK_MAIN, SUB_COMMITTEES as FALLBACK_SUBS, getSubCommitteeLocalizedName } from '@/lib/committees';
+import { 
+  MAIN_COMMITTEE as FALLBACK_MAIN, 
+  SUB_COMMITTEES as FALLBACK_SUBS, 
+  getSubCommitteeLocalizedName,
+  localizeOfficeRole,
+  COMMITTEE_STANDARD_PROVISION 
+} from '@/lib/committees';
 import { useLanguage } from '@/components/LanguageProvider';
 
 export default function CommitteePage() {
@@ -134,6 +140,27 @@ export default function CommitteePage() {
         <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', maxWidth: '640px', margin: '0 auto', lineHeight: 'var(--line-height-base)' }}>
           {t('committee.subtitle')}
         </p>
+
+        {/* Official Standard Provision Banner */}
+        <div style={{
+          marginTop: '20px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '10px',
+          background: 'rgba(99, 102, 241, 0.1)',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+          padding: '10px 22px',
+          borderRadius: '999px',
+          fontSize: '0.85rem',
+          color: 'var(--text-main)',
+          fontWeight: '700',
+          boxShadow: '0 4px 14px rgba(99, 102, 241, 0.12)'
+        }}>
+          <ShieldCheck size={16} color="var(--primary)" style={{ flexShrink: 0 }} />
+          <span>
+            {COMMITTEE_STANDARD_PROVISION[language] || COMMITTEE_STANDARD_PROVISION.en}
+          </span>
+        </div>
       </div>
 
       {loading ? (
@@ -192,7 +219,7 @@ export default function CommitteePage() {
                               {mainCommittee.lead.name}
                             </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700', marginTop: '2px', lineHeight: '1.3' }}>
-                              {t('committee.mainCommittee.chair')}
+                              {localizeOfficeRole(mainCommittee.lead.role, true, language)}
                             </div>
                           </div>
                         </div>
@@ -235,7 +262,7 @@ export default function CommitteePage() {
                               {member.name}
                             </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '2px', lineHeight: '1.3' }}>
-                              {member.role}
+                              {localizeOfficeRole(member.role, true, language)}
                             </div>
                           </div>
                         </div>
@@ -349,8 +376,8 @@ export default function CommitteePage() {
                                 ? (language === 'km' ? 'រង់ចាំការចាត់តាំង' : language === 'zh' ? '待任命' : 'To Be Appointed')
                                 : sub.lead.name}
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '2px' }}>
-                              {sub.lead.role || t('committee.leadTitle')}
+                            <div style={{ fontSize: '0.75rem', color: sub.color || 'var(--primary)', fontWeight: '700', marginTop: '2px' }}>
+                              {localizeOfficeRole(sub.lead.role, false, language)}
                             </div>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', color: sub.color || 'var(--primary)', fontWeight: '700', marginTop: '4px' }}>
                               <ShieldCheck size={12} />
@@ -386,9 +413,21 @@ export default function CommitteePage() {
                                       {sm.name}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '1px' }}>
-                                      {sm.role}
+                                      {localizeOfficeRole(sm.role, false, language)}
                                     </div>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+                                      {(() => {
+                                        const rLower = (sm.role || '').toLowerCase();
+                                        const isCoPres = rLower.includes('co-pres') || rLower.includes('copres') || rLower.includes('សហប្រធាន') || rLower.includes('共同主席');
+                                        if (isCoPres) {
+                                          return (
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: '#8b5cf6', fontWeight: '800', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.35)', padding: '1px 6px', borderRadius: '4px' }}>
+                                              ⭐ {language === 'km' ? 'សហប្រធានអនុគណៈកម្មការ' : language === 'zh' ? '分委员会共同主席' : 'Co-President of the Subcommittee'}
+                                            </span>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
                                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: sub.color || 'var(--primary)', fontWeight: '700' }}>
                                         <ShieldCheck size={11} />
                                         <span>{localized.name}</span>
