@@ -160,7 +160,7 @@ export default function AdminSidebar({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis'
                   }}>
-                    {user?.name || 'Administrator'}
+                    {user?.name || (user?.role === 'admin' ? 'Admin' : 'User')}
                   </div>
                   <div style={{
                     fontSize: '0.7rem',

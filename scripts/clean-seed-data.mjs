@@ -28,26 +28,9 @@ async function main() {
     const delInvites = await client.query('DELETE FROM committee_invites;');
     console.log(`Deleted invites: ${delInvites.rowCount}`);
 
-    // Clean mock users, keep admin
-    const delUsers = await client.query("DELETE FROM users WHERE username != 'admin';");
-    console.log(`Deleted non-admin users: ${delUsers.rowCount}`);
-
-    // Ensure admin user exists with clean name
-    await client.query(`
-      INSERT INTO users (id, username, password_hash, name, role, committee, avatar, created_at)
-      VALUES (
-        'usr-admin',
-        'admin',
-        '42917319bd1d0ae35efce52055805529f85614de699384397d68453b09d32f6c',
-        'Administrator',
-        'admin',
-        'Central Committee',
-        '👨‍💼',
-        NOW()
-      )
-      ON CONFLICT (username) DO UPDATE 
-      SET name = 'Administrator', role = 'admin', committee = 'Central Committee', avatar = '👨‍💼';
-    `);
+    // Clean mock seed user usr-admin if exists
+    const delAdmin = await client.query("DELETE FROM users WHERE id = 'usr-admin' OR username = 'admin';");
+    console.log(`Deleted usr-admin mock users: ${delAdmin.rowCount}`);
 
     // Reset committee members to empty array and member_count to 0
     const updateCommittees = await client.query(`
@@ -55,20 +38,6 @@ async function main() {
       SET members = '[]'::jsonb, member_count = 0;
     `);
     console.log(`Reset committees members: ${updateCommittees.rowCount}`);
-
-    // Update main committee lead
-    await client.query(`
-      UPDATE committees 
-      SET lead = jsonb_build_object(
-        'name', 'Administrator',
-        'role', 'Central Committee President',
-        'username', 'admin',
-        'avatar', '👨‍💼',
-        'committee', 'Central Committee',
-        'bio', 'Leading EXPO 2026 operational governance and final approval authority.'
-      )
-      WHERE id = 'main-committee' OR key = 'Central Committee';
-    `);
 
     // Check counts
     const eventsCount = await client.query('SELECT COUNT(*) FROM events;');

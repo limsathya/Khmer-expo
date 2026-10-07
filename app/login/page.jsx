@@ -103,23 +103,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = async (usr, pwd) => {
-    setErrorMsg('');
-    setLoading(true);
-    try {
-      const loggedUser = await login(usr, pwd);
-      if (loggedUser.role === 'admin' || loggedUser.role === 'sub_committee') {
-        router.push('/admin');
-      } else {
-        router.push('/timeline');
-      }
-    } catch (err) {
-      setErrorMsg(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div style={{ maxWidth: '540px', margin: '40px auto', padding: '0 clamp(12px, 3vw, 24px)' }}>
       {/* Brand Header */}
@@ -153,32 +136,6 @@ export default function LoginPage() {
       </div>
 
       <div className="glass-panel" style={{ padding: 'clamp(20px, 4vw, 32px)' }}>
-        {/* Administrator Fast Login */}
-        {mode === 'login' && (
-          <div style={{ marginBottom: '24px', background: 'var(--btn-secondary-bg)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: language === 'en' ? 'uppercase' : 'none', letterSpacing: language === 'en' ? '0.05em' : 'normal', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 'var(--line-height-base)' }}>
-              <ShieldCheck size={14} color="var(--primary)" />
-              <span>{language === 'km' ? '⚡ ចូលប្រើជាអ្នកគ្រប់គ្រង Administrator (១-Click)' : language === 'zh' ? '⚡ 一键登录管理员账号' : '⚡ Chief Administrator Sign-In (1-Click)'}</span>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin', 'admin123')}
-                disabled={loading}
-                className="btn btn-primary btn-sm"
-                style={{ justifyContent: 'space-between', padding: '10px 14px', fontSize: '0.85rem', flexWrap: 'wrap', gap: '8px', lineHeight: 'var(--line-height-base)' }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'left' }}>
-                  <span>👨‍💼</span>
-                  <strong>Administrator (Central Committee)</strong>
-                </span>
-                <span style={{ fontSize: '0.725rem', opacity: 0.85 }}>admin / admin123</span>
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Tab Switcher */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border-subtle)', marginBottom: '24px' }}>
           <button
@@ -247,7 +204,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   required
-                  placeholder="admin, sarah_lin, finance_lead..."
+                  placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="form-input"

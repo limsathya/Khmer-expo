@@ -138,8 +138,8 @@ export default function AdminDashboardPage() {
   const [dbRefreshing, setDbRefreshing] = useState(false);
 
   // Login form state for inline admin authentication
-  const [adminUsername, setAdminUsername] = useState('admin');
-  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [adminAuthError, setAdminAuthError] = useState('');
   const [adminAuthLoading, setAdminAuthLoading] = useState(false);
 
@@ -658,28 +658,50 @@ export default function AdminDashboardPage() {
               : 'The Admin Dashboard manages events, all 10 specialized committees, and officer accounts. Please sign in with committee credentials.'}
           </p>
 
-          {/* 1-Click Fast Login */}
-          <div style={{ background: 'var(--btn-secondary-bg)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-subtle)', marginBottom: '24px' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-              {language === 'km' ? '⚡ គណនី Admin' : language === 'zh' ? '⚡ 管理员登录' : '⚡ Administrator Sign-In'}
+          {/* Admin Login Form */}
+          <form onSubmit={handleInlineAdminLogin} style={{ background: 'var(--btn-secondary-bg)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-subtle)', marginBottom: '24px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+              <ShieldCheck size={15} color="var(--primary)" />
+              <span>{language === 'km' ? 'ចូលប្រើប្រព័ន្ធគ្រប់គ្រង' : language === 'zh' ? '登录管理系统' : 'Sign In to Dashboard'}</span>
+            </div>
+            <div>
+              <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>{t('auth.usernameLabel', 'Username')}</label>
+              <input
+                type="text"
+                required
+                value={adminUsername}
+                onChange={e => setAdminUsername(e.target.value)}
+                placeholder="Username"
+                className="form-input"
+                style={{ fontSize: '0.875rem' }}
+              />
+            </div>
+            <div>
+              <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>{t('auth.passwordLabel', 'Password')}</label>
+              <input
+                type="password"
+                required
+                value={adminPassword}
+                onChange={e => setAdminPassword(e.target.value)}
+                placeholder="••••••••"
+                className="form-input"
+                style={{ fontSize: '0.875rem' }}
+              />
             </div>
             <button
-              onClick={() => handleInlineAdminLogin()}
+              type="submit"
               disabled={adminAuthLoading}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '12px', fontWeight: '700' }}
+              style={{ width: '100%', padding: '10px 14px', fontWeight: '700', marginTop: '6px' }}
             >
-              <ShieldCheck size={16} />
+              <LogIn size={15} />
               <span>
                 {adminAuthLoading 
                   ? t('auth.signingIn', 'Authenticating...') 
-                  : (language === 'km' ? 'ចូលប្រើជាប្រធាន Admin (១-Click)' : language === 'zh' ? '一键登录管理员' : 'Sign In as Chief Admin (1-Click)')}
+                  : (language === 'km' ? 'ចូលប្រើប្រាស់' : language === 'zh' ? '立即登录' : 'Sign In')}
               </span>
             </button>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '8px' }}>
-              {language === 'km' ? 'គណនីគ្រប់គ្រង៖' : language === 'zh' ? '管理员凭据：' : 'Administrator credentials:'} <code>admin</code> / <code>admin123</code>
-            </div>
-          </div>
+          </form>
 
           {adminAuthError && (
             <div style={{ background: 'var(--status-rejected-bg)', border: '1px solid var(--status-rejected-border)', color: 'var(--status-rejected)', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
