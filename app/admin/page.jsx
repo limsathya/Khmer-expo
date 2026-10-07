@@ -2209,8 +2209,8 @@ export default function AdminDashboardPage() {
                   <label className="form-label">{t('admin.committeesSection.membersNum', 'Member Count')}</label>
                   <input
                     type="number"
-                    min="1"
-                    max="50"
+                    min="0"
+                    max="10000"
                     value={committeeFormData.memberCount}
                     onChange={(e) => setCommitteeFormData({ ...committeeFormData, memberCount: e.target.value })}
                     className="form-input"

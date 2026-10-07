@@ -23,6 +23,7 @@ export default function CommitteePage() {
   const [mainCommittee, setMainCommittee] = useState(FALLBACK_MAIN);
   const [subCommittees, setSubCommittees] = useState(FALLBACK_SUBS);
   const [loading, setLoading] = useState(true);
+  const [expandedSubs, setExpandedSubs] = useState({});
 
   useEffect(() => {
     fetchCommittees();
@@ -360,35 +361,74 @@ export default function CommitteePage() {
                       )}
 
                       {/* Sub-Committee Members */}
-                      {Array.isArray(sub.members) && sub.members.length > 0 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-                          {sub.members.map((sm, idx) => (
-                            <div key={idx} style={{ background: 'var(--btn-secondary-bg)', padding: '12px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid var(--border-subtle)' }}>
-                              <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{sm.avatar || '👤'}</span>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>
-                                  {sm.name}
+                      {Array.isArray(sub.members) && sub.members.length > 0 && (() => {
+                        const subKey = sub.id || sub.key;
+                        const isExpanded = !!expandedSubs[subKey];
+                        const visible = isExpanded ? sub.members : sub.members.slice(0, 4);
+
+                        return (
+                          <div style={{ marginBottom: '16px' }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '10px',
+                                maxHeight: isExpanded ? '420px' : 'none',
+                                overflowY: isExpanded ? 'auto' : 'visible',
+                                paddingRight: isExpanded ? '6px' : '0'
+                              }}
+                            >
+                              {visible.map((sm, idx) => (
+                                <div key={idx} style={{ background: 'var(--btn-secondary-bg)', padding: '12px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid var(--border-subtle)' }}>
+                                  <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{sm.avatar || '👤'}</span>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {sm.name}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '1px' }}>
+                                      {sm.role}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+                                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: sub.color || 'var(--primary)', fontWeight: '700' }}>
+                                        <ShieldCheck size={11} />
+                                        <span>{localized.name}</span>
+                                      </span>
+                                      {sm.centralCommittee && (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '700', background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)', padding: '1px 6px', borderRadius: '4px' }}>
+                                          <Layers size={11} />
+                                          <span>{t('committee.mainCommittee.name')}</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '1px' }}>
-                                  {sm.role}
-                                </div>
-                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: sub.color || 'var(--primary)', fontWeight: '700' }}>
-                                    <ShieldCheck size={11} />
-                                    <span>{localized.name}</span>
-                                  </span>
-                                  {sm.centralCommittee && (
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '700', background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)', padding: '1px 6px', borderRadius: '4px' }}>
-                                      <Layers size={11} />
-                                      <span>{t('committee.mainCommittee.name')}</span>
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      )}
+
+                            {sub.members.length > 4 && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedSubs(prev => ({ ...prev, [subKey]: !prev[subKey] }))}
+                                className="btn btn-secondary btn-sm"
+                                style={{
+                                  width: '100%',
+                                  marginTop: '10px',
+                                  fontSize: '0.78rem',
+                                  padding: '8px 12px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px'
+                                }}
+                              >
+                                {isExpanded 
+                                  ? (language === 'km' ? '▲ បង្រួមបញ្ជី' : language === 'zh' ? '▲ 收起名单' : '▲ Show Less')
+                                  : (language === 'km' ? `+ បង្ហាញសមាជិកទាំងអស់ (${sub.members.length} នាក់)` : language === 'zh' ? `+ 查看全部 ${sub.members.length} 位成员` : `+ Show All ${sub.members.length} Members`)}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Actions & Routing */}

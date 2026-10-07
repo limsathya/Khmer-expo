@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { 
   getMembersFromDB, 
   addMemberToCommitteeInDB, 
+  bulkAddMembersToCommitteeInDB,
   updateMemberInCommitteeInDB, 
   deleteMemberFromCommitteeInDB 
 } from '@/lib/db';
@@ -20,6 +21,17 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const committeeId = body.committeeId || body.committee;
+
+    if (!committeeId) {
+      return NextResponse.json({ error: 'Committee is required' }, { status: 400 });
+    }
+
+    // High-volume batch/bulk member insertion
+    if (Array.isArray(body.members) && body.members.length > 0) {
+      const added = await bulkAddMembersToCommitteeInDB(committeeId, body.members);
+      return NextResponse.json({ success: true, count: added.length, members: added }, { status: 201 });
+    }
+
     const memberData = body.member || body;
     const name = memberData.name?.trim();
     const role = memberData.role?.trim() || 'Committee Member';
@@ -28,8 +40,8 @@ export async function POST(request) {
     const centralCommittee = memberData.centralCommittee || body.centralCommittee;
     const subCommittee = memberData.subCommittee || body.subCommittee;
 
-    if (!committeeId || !name) {
-      return NextResponse.json({ error: 'Committee and member name are required' }, { status: 400 });
+    if (!name) {
+      return NextResponse.json({ error: 'Member name is required' }, { status: 400 });
     }
 
     const created = await addMemberToCommitteeInDB(committeeId, {
