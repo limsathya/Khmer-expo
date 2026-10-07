@@ -53,6 +53,7 @@ import IdentityManager from '@/components/admin/IdentityManager';
 import TimelineManager from '@/components/admin/TimelineManager';
 import TranslationsManager from '@/components/admin/TranslationsManager';
 import CategoriesManager from '@/components/admin/CategoriesManager';
+import CommitteesManager from '@/components/admin/CommitteesManager';
 
 const ALL_DEFAULT_COMMITTEES = [
   { ...MAIN_COMMITTEE, type: 'main' },
@@ -107,16 +108,7 @@ export default function AdminDashboardPage() {
 
   // --- COMMITTEES STATE ---
   const [committeesList, setCommitteesList] = useState(ALL_DEFAULT_COMMITTEES);
-  const [editingCommittee, setEditingCommittee] = useState(null);
-  const [committeeFormData, setCommitteeFormData] = useState({
-    name: '',
-    description: '',
-    memberCount: 3,
-    leadName: '',
-    leadRole: '',
-    leadAvatar: '👨‍💼'
-  });
-  const [savingCommittee, setSavingCommittee] = useState(false);
+
 
   // --- USERS STATE ---
   const [usersList, setUsersList] = useState([]);
@@ -432,55 +424,7 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // --- COMMITTEE MANAGEMENT HANDLERS ---
-  function openEditCommitteeModal(comm) {
-    setEditingCommittee(comm);
-    setCommitteeFormData({
-      name: comm.name || comm.key,
-      description: comm.description || '',
-      memberCount: comm.memberCount !== undefined ? comm.memberCount : (comm.members?.length || 0),
-      leadName: comm.lead?.name || '',
-      leadRole: comm.lead?.role || 'Sub-Committee Lead',
-      leadAvatar: comm.lead?.avatar || '👨‍💼'
-    });
-  }
 
-  async function handleSaveCommittee(e) {
-    e.preventDefault();
-    if (!editingCommittee) return;
-    setSavingCommittee(true);
-    try {
-      const res = await fetch('/api/committees', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: editingCommittee.id || editingCommittee.key,
-          description: committeeFormData.description,
-          memberCount: Number(committeeFormData.memberCount) >= 0 ? Number(committeeFormData.memberCount) : (editingCommittee.members?.length || 0),
-          lead: {
-            name: committeeFormData.leadName,
-            role: committeeFormData.leadRole,
-            avatar: committeeFormData.leadAvatar,
-            username: editingCommittee.lead?.username || 'admin',
-            committee: editingCommittee.key
-          }
-        })
-      });
-
-      if (res.ok) {
-        showToast(`Committee updated successfully!`);
-        setEditingCommittee(null);
-        await loadDashboardData();
-      } else {
-        showToast('Failed to update committee in database', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Network error while saving committee', 'error');
-    } finally {
-      setSavingCommittee(false);
-    }
-  }
 
   // --- USER / OFFICER MANAGEMENT HANDLERS ---
   function openCreateUserModal() {
@@ -1563,138 +1507,10 @@ export default function AdminDashboardPage() {
       )}
 
       {/* =========================================================================
-          SECTION 2: COMMITTEES & SUBCOMMITTEES SETUP
+          SECTION 2: COMMITTEES & SUBCOMMITTEES SETUP (Must choose from Member roster)
           ========================================================================= */}
       {activeSection === 'committees' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '24px' }}>
-            <div>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
-                {t('admin.committeesSection.title', 'Committees & Specialized Subcommittees Directory')}
-              </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                {t('admin.committeesSection.subtitle', 'Manage official governance committees, executive leadership, member counts, and review scopes.')}
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={loadDashboardData} className="btn btn-secondary btn-sm">
-                <RefreshCw size={14} />
-                <span>{t('admin.refreshBtn', 'Refresh Committees')}</span>
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '22px' }}>
-            {committeesList.map((comm) => {
-              const isMain = comm.type === 'main' || comm.id === 'main-committee';
-              const isProtocol = comm.id === 'sub_protocol' || comm.key?.includes('Reception');
-              const localName = getSubCommitteeLocalizedName(comm.key || comm.id, language);
-
-              return (
-                <div
-                  key={comm.id || comm.key}
-                  className="glass-card"
-                  style={{
-                    padding: '24px',
-                    borderTop: `4px solid ${comm.color || 'var(--primary)'}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <div>
-                    {/* Header Badges */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '14px' }}>
-                      <span style={{
-                        fontSize: '0.75rem',
-                        fontWeight: '700',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        background: 'var(--btn-secondary-bg)',
-                        color: comm.color || 'var(--primary)',
-                        fontFamily: 'var(--font-mono)'
-                      }}>
-                        {comm.id}
-                      </span>
-
-                      {isMain ? (
-                        <span style={{ fontSize: '0.75rem', fontWeight: '800', padding: '3px 9px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', border: '1px solid rgba(99, 102, 241, 0.35)' }}>
-                          ⭐ {language === 'km' ? 'គណៈកម្មការកណ្តាល' : language === 'zh' ? '中央常务委员会' : 'Governing Body'}
-                        </span>
-                      ) : isProtocol ? (
-                        <span style={{ fontSize: '0.75rem', fontWeight: '800', padding: '3px 9px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
-                          ⭐ {language === 'km' ? 'គ្រប់គ្រងទាំងអស់' : language === 'zh' ? '全权管理' : 'Universal Super-Admin'}
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '12px', background: 'var(--btn-secondary-bg)', color: 'var(--text-muted)' }}>
-                          {comm.memberCount ?? (comm.members?.length || 0)} {t('admin.committeesSection.memberCount', 'Members')}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Localized Main Title */}
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.3' }}>
-                      {localName}
-                    </h3>
-
-                    {/* Mandate Description */}
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5', marginBottom: '18px' }}>
-                      {comm.description}
-                    </p>
-
-                    {/* Lead Officer Profile */}
-                    <div style={{ background: 'var(--btn-secondary-bg)', padding: '12px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                      <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
-                        {comm.lead?.avatar || '👨‍💼'}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: '700' }}>
-                          {t('admin.committeesSection.leadOfficer', 'Lead Officer')}
-                        </div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                          {comm.lead?.name || 'Assigned Lead'}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '600' }}>
-                          {comm.lead?.role || 'Sub-Committee Lead'}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Scopes */}
-                    {Array.isArray(comm.categories) && comm.categories.length > 0 && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                          {t('admin.committeesSection.categoriesTitle', 'Review Scopes')}:
-                        </span>
-                        {comm.categories.map(cat => (
-                          <span key={cat} style={{ fontSize: '0.7rem', padding: '1px 6px', borderRadius: '4px', background: 'var(--input-bg)', color: 'var(--text-main)', border: '1px solid var(--border-subtle)' }}>
-                            {t(`categories.${cat}`, cat)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Edit Action Button */}
-                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                      {comm.members?.length || 0} {language === 'km' ? 'មន្ត្រីសកម្ម' : language === 'zh' ? '位在编人员' : 'Active Personnel'}
-                    </div>
-
-                    <button
-                      onClick={() => openEditCommitteeModal(comm)}
-                      className="btn btn-secondary btn-sm"
-                    >
-                      <Edit3 size={13} />
-                      <span>{t('admin.committeesSection.editBtn', 'Edit Committee')}</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <CommitteesManager showToast={showToast} />
       )}
 
       {/* =========================================================================
@@ -2169,101 +1985,7 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* EDIT COMMITTEE MODAL */}
-      {editingCommittee && (
-        <div className="modal-overlay" onClick={() => setEditingCommittee(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ padding: '30px', maxWidth: '580px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                  <Building size={20} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)' }}>
-                    {t('admin.committeesSection.modalEditTitle', 'Edit Committee Details')}
-                  </h3>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                    {editingCommittee.id} • {getSubCommitteeLocalizedName(editingCommittee.key, language)}
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => setEditingCommittee(null)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
-                <X size={18} />
-              </button>
-            </div>
 
-            <form onSubmit={handleSaveCommittee} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
-                <div>
-                  <label className="form-label">{t('admin.committeesSection.leadName', 'Lead Officer Name')} *</label>
-                  <input
-                    type="text"
-                    required
-                    value={committeeFormData.leadName}
-                    onChange={(e) => setCommitteeFormData({ ...committeeFormData, leadName: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-                <div>
-                  <label className="form-label">{t('admin.committeesSection.leadAvatar', 'Lead Emoji')}</label>
-                  <input
-                    type="text"
-                    value={committeeFormData.leadAvatar}
-                    onChange={(e) => setCommitteeFormData({ ...committeeFormData, leadAvatar: e.target.value })}
-                    className="form-input"
-                    placeholder="👨‍💼"
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
-                <div>
-                  <label className="form-label">{t('admin.committeesSection.leadRole', 'Lead Title / Role')} *</label>
-                  <input
-                    type="text"
-                    required
-                    value={committeeFormData.leadRole}
-                    onChange={(e) => setCommitteeFormData({ ...committeeFormData, leadRole: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-                <div>
-                  <label className="form-label">{t('admin.committeesSection.membersNum', 'Member Count')}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="10000"
-                    value={committeeFormData.memberCount}
-                    onChange={(e) => setCommitteeFormData({ ...committeeFormData, memberCount: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="form-label">{t('admin.committeesSection.description', 'Committee Mandate & Description')} *</label>
-                <textarea
-                  rows={4}
-                  required
-                  value={committeeFormData.description}
-                  onChange={(e) => setCommitteeFormData({ ...committeeFormData, description: e.target.value })}
-                  className="form-textarea"
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={() => setEditingCommittee(null)} className="btn btn-secondary btn-sm">
-                  {t('admin.cancel', 'Cancel')}
-                </button>
-                <button type="submit" disabled={savingCommittee} className="btn btn-primary btn-sm">
-                  <Check size={14} />
-                  <span>{savingCommittee ? 'Saving...' : t('admin.committeesSection.saveBtn', 'Save Committee')}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* CREATE & EDIT OFFICER MODAL */}
       {(isCreateUserModalOpen || editingUser) && (
