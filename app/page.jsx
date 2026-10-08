@@ -118,12 +118,60 @@ export default function HomePage() {
   }, []);
 
   const categories = [
-    { id: 'business', name: 'Business & Trade', nameKm: 'ពាណិជ្ជកម្ម & សេដ្ឋកិច្ច', nameZh: '经贸与投资', icon: Briefcase, color: 'from-blue-600 to-indigo-600' },
-    { id: 'education', name: 'Higher Education', nameKm: 'ឧត្តមសិក្សា & បណ្តុះបណ្តាល', nameZh: '高等教育与学术', icon: GraduationCap, color: 'from-emerald-600 to-teal-600' },
-    { id: 'culture', name: 'Culture & Heritage', nameKm: 'វប្បធម៌ & សិល្បៈ', nameZh: '文化与非遗艺术', icon: Sparkles, color: 'from-amber-600 to-orange-600' },
-    { id: 'tourism', name: 'Tourism & Travel', nameKm: 'ទេសចរណ៍ & បដិសណ្ឋារកិច្ច', nameZh: '文旅与生态游', icon: Palmtree, color: 'from-cyan-600 to-blue-600' },
-    { id: 'food', name: 'Gastronomy & Agribusiness', nameKm: 'ម្ហូបអាហារ & កសិ-ពាណិជ្ជកម្ម', nameZh: '美食与绿色农业', icon: UtensilsCrossed, color: 'from-rose-600 to-red-600' },
-    { id: 'investment', name: 'Cross-Border Investment', nameKm: 'ការវិនិយោគឆ្លងដែន', nameZh: '跨境合作与科创', icon: DollarSign, color: 'from-purple-600 to-indigo-700' },
+    { 
+      id: 'business', 
+      name: 'Business & Trade', 
+      nameKm: 'ពាណិជ្ជកម្ម & សេដ្ឋកិច្ច', 
+      nameZh: '经贸与投资', 
+      icon: Briefcase, 
+      color: 'from-blue-600 to-indigo-600',
+      desc: 'Connect with certified import-export suppliers, negotiate direct procurement contracts, and unlock tariff-advantaged trade channels across the RCEP corridor.'
+    },
+    { 
+      id: 'education', 
+      name: 'Higher Education', 
+      nameKm: 'ឧត្តមសិក្សា & បណ្តុះបណ្តាល', 
+      nameZh: '高等教育与学术', 
+      icon: GraduationCap, 
+      color: 'from-emerald-600 to-teal-600',
+      desc: 'Foster bilateral academic alliances, joint degree programs, and collaborative research initiatives between premier Cambodian institutions and Yunnan universities.'
+    },
+    { 
+      id: 'culture', 
+      name: 'Culture & Heritage', 
+      nameKm: 'វប្បធម៌ & សិល្បៈ', 
+      nameZh: '文化与非遗艺术', 
+      icon: Sparkles, 
+      color: 'from-amber-600 to-orange-600',
+      desc: 'Experience living artisanal traditions, cultural IP exchanges, and museum partnerships that drive commercial creative industries and bilateral soft-power diplomacy.'
+    },
+    { 
+      id: 'tourism', 
+      name: 'Tourism & Travel', 
+      nameKm: 'ទេសចរណ៍ & បដិសណ្ឋារកិច្ច', 
+      nameZh: '文旅与生态游', 
+      icon: Palmtree, 
+      color: 'from-cyan-600 to-blue-600',
+      desc: 'Engage top tour operators and hospitality investors to structure cross-border itineraries, chartered transit routes, and eco-tourism development packages.'
+    },
+    { 
+      id: 'food', 
+      name: 'Gastronomy & Agribusiness', 
+      nameKm: 'ម្ហូបអាហារ & កសិ-ពាណិជ្ជកម្ម', 
+      nameZh: '美食与绿色农业', 
+      icon: UtensilsCrossed, 
+      color: 'from-rose-600 to-red-600',
+      desc: 'Source premium GI-certified agricultural exports, explore cold-chain logistics networks, and partner with sustainable agro-processing innovators.'
+    },
+    { 
+      id: 'investment', 
+      name: 'Cross-Border Investment', 
+      nameKm: 'ការវិនិយោគឆ្លងដែន', 
+      nameZh: '跨境合作与科创', 
+      icon: DollarSign, 
+      color: 'from-purple-600 to-indigo-700',
+      desc: 'Access vetted infrastructure, green energy, and digital economy ventures with direct advisory from government trade ministries and sovereign funds.'
+    },
   ];
 
   return (
@@ -259,23 +307,25 @@ export default function HomePage() {
               return (
                 <div 
                   key={cat.id} 
-                  className="group p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all hover:-translate-y-1"
+                  className="group p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all hover:-translate-y-1 flex flex-col justify-between min-h-[280px]"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-white mb-4 shadow-lg`}>
-                    <Icon size={24} />
+                  <div>
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-white mb-4 shadow-lg`}>
+                      <Icon size={24} />
+                    </div>
+                    <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                      {cat.name}
+                    </h4>
+                    <div className="text-xs text-amber-400 font-medium mb-3">
+                      {cat.nameKm} • {cat.nameZh}
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                      {cat.desc}
+                    </p>
                   </div>
-                  <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
-                    {cat.name}
-                  </h4>
-                  <div className="text-xs text-amber-400 font-medium mb-3">
-                    {cat.nameKm} • {cat.nameZh}
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                    High-level trade pavilions, featured presentations, B2B procurement matchings, and institutional agreements.
-                  </p>
                   <Link 
                     href={`/program?category=${cat.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-400 hover:text-blue-300 pt-2 border-t border-slate-800/80 mt-auto transition-colors"
                   >
                     <span>View Sessions</span>
                     <ArrowRight size={13} />
