@@ -1,6 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300..900;1,300..900&family=Noto+Serif+Khmer:wght@300..900&family=Noto+Serif+SC:wght@300..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-royal-blue: #0f2b5c;
+  --color-cambodia-red: #c8102e;
+  --color-gold: #d4af37;
+  --color-navy: #0f172a;
+}
 
 :root, [data-theme="dark"] {
+  --royal-blue: #0f2b5c;
+  --cambodia-red: #c8102e;
+  --gold-accent: #d4af37;
+  --navy-text: #0f172a;
+  --light-gray: #f1f5f9;
   --bg-main: #060911;
   --bg-subtle: #0b1120;
   --bg-card: rgba(15, 23, 42, 0.65);
@@ -65,6 +78,11 @@
 }
 
 [data-theme="light"] {
+  --royal-blue: #0f2b5c;
+  --cambodia-red: #c8102e;
+  --gold-accent: #d4af37;
+  --navy-text: #0f172a;
+  --light-gray: #f1f5f9;
   --bg-main: #f8fafc;
   --bg-subtle: #edf2f7;
   --bg-card: rgba(255, 255, 255, 0.75);

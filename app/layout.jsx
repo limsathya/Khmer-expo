@@ -8,8 +8,8 @@ import Footer from '@/components/Footer';
 import GlassAmbientBackground from '@/components/GlassAmbientBackground';
 
 export const metadata = {
-  title: 'EXPO 2026 — Future Tech & Innovation Fair',
-  description: 'Interactive Expo Timeline and Administrative Approval Dashboard',
+  title: 'Cambodia–China Expo Week 2026 — Official Bilateral Platform',
+  description: 'Official management platform and portal for Cambodia–China Expo Week 2026 in Kunming, Yunnan, China (November 7–11, 2026).',
 };
 
 export const viewport = {
