@@ -19,6 +19,25 @@ export default function TimelineManager({ showToast }) {
   const { expoConfig, updateSettings, getTimelineDays } = useSettings();
   const { t, language } = useLanguage();
 
+  const formatTimeString = (time, endTime) => {
+    if (!time) return '';
+    const to12h = (tStr) => {
+      if (!tStr) return '';
+      const [hStr, mStr] = tStr.split(':');
+      let h = parseInt(hStr, 10);
+      if (isNaN(h)) return tStr;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${mStr || '00'} ${ampm}`;
+    };
+    const s12 = to12h(time);
+    const e12 = to12h(endTime);
+    if (endTime) {
+      return `${time} – ${endTime} (${s12} – ${e12})`;
+    }
+    return `${time} (${s12})`;
+  };
+
   const [days, setDays] = useState(
     Array.isArray(expoConfig.timelineDays) && expoConfig.timelineDays.length > 0
       ? expoConfig.timelineDays
@@ -26,18 +45,24 @@ export default function TimelineManager({ showToast }) {
           {
             day: 1,
             date: '2026-10-12',
+            startTime: '08:30',
+            endTime: '18:00',
             label: { en: 'Day 1: Oct 12', km: 'ថ្ងៃទី១: ១២ តុលា', zh: '第1天：10月12日' },
             theme: { en: 'Grand Opening & Keynote Tech', km: 'ពិធីបើកសម្ពោធ និងបច្ចេកវិទ្យាសំខាន់ៗ', zh: '开幕盛典与主旨科技' }
           },
           {
             day: 2,
             date: '2026-10-13',
+            startTime: '09:00',
+            endTime: '18:00',
             label: { en: 'Day 2: Oct 13', km: 'ថ្ងៃទី២: ១៣ តុលា', zh: '第2天：10月13日' },
             theme: { en: 'Innovation Showcase & Contests', km: 'ការបង្ហាញនវានុវត្តន៍ និងការប្រកួតប្រជែង', zh: '创新展示与前沿竞赛' }
           },
           {
             day: 3,
             date: '2026-10-14',
+            startTime: '09:00',
+            endTime: '21:00',
             label: { en: 'Day 3: Oct 14', km: 'ថ្ងៃទី៣: ១៤ តុលា', zh: '第3天：10月14日' },
             theme: { en: 'Cultural Gala & Award Honors', km: 'ពិធីរាត្រីសមោសរសិល្បៈ និងប្រគល់ពានរង្វាន់', zh: '文化盛典与颁奖闭幕' }
           }
@@ -77,6 +102,8 @@ export default function TimelineManager({ showToast }) {
     const newDay = {
       day: nextDayNum,
       date: nextDateStr,
+      startTime: '09:00',
+      endTime: '18:00',
       label: {
         en: `Day ${nextDayNum}: ${nextDateStr.slice(5)}`,
         km: `ថ្ងៃទី${nextDayNum}`,
@@ -168,8 +195,24 @@ export default function TimelineManager({ showToast }) {
                   <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '1rem' }}>
                     {dayItem.label?.[language] || dayItem.label?.en || `Day ${dayItem.day || index + 1}`}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                    📅 {dayItem.date}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '3px' }}>
+                    <span>📅 {dayItem.date}</span>
+                    {(dayItem.startTime || dayItem.endTime) && (
+                      <span style={{ 
+                        color: 'var(--primary)', 
+                        fontWeight: '700',
+                        background: 'rgba(99, 102, 241, 0.12)',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(99, 102, 241, 0.25)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <Clock size={12} />
+                        <span>{formatTimeString(dayItem.startTime, dayItem.endTime)}</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -210,6 +253,96 @@ export default function TimelineManager({ showToast }) {
                   onChange={(e) => handleDayFieldChange(index, 'day', null, Number(e.target.value))}
                   className="form-input"
                 />
+              </div>
+
+              {/* Day Start Time */}
+              <div>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock size={13} color="var(--primary)" />
+                  <span>{language === 'km' ? 'ម៉ោងចាប់ផ្តើមប្រចាំថ្ងៃ (24h)' : language === 'zh' ? '每日开放时间 (24小时制)' : 'Day Start Time (24h)'}</span>
+                </label>
+                <input
+                  type="time"
+                  value={dayItem.startTime || '08:30'}
+                  onChange={(e) => handleDayFieldChange(index, 'startTime', null, e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Day End Time */}
+              <div>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock size={13} color="var(--primary)" />
+                  <span>{language === 'km' ? 'ម៉ោងបញ្ចប់ប្រចាំថ្ងៃ (24h)' : language === 'zh' ? '每日结束时间 (24小时制)' : 'Day End Time (24h)'}</span>
+                </label>
+                <input
+                  type="time"
+                  value={dayItem.endTime || '18:00'}
+                  onChange={(e) => handleDayFieldChange(index, 'endTime', null, e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Live Time Preview & Presets banner */}
+              <div style={{
+                gridColumn: '1 / -1',
+                background: 'rgba(99, 102, 241, 0.08)',
+                border: '1px dashed rgba(99, 102, 241, 0.3)',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                fontSize: '0.825rem',
+                color: 'var(--text-main)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <Clock size={15} color="var(--primary)" />
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    {language === 'km' ? 'កាលវិភាគម៉ោងលើ Timeline:' : language === 'zh' ? '时间线日程展示时间:' : 'Public Timeline Schedule Display:'}
+                  </span>
+                  <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                    {formatTimeString(dayItem.startTime || '08:30', dayItem.endTime || '18:00')}
+                  </strong>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{language === 'km' ? 'កំណត់រហ័ស:' : language === 'zh' ? '快捷预设:' : 'Presets:'}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDayFieldChange(index, 'startTime', null, '08:30');
+                      handleDayFieldChange(index, 'endTime', null, '18:00');
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '2px 8px', fontSize: '0.72rem' }}
+                  >
+                    08:30 - 18:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDayFieldChange(index, 'startTime', null, '09:00');
+                      handleDayFieldChange(index, 'endTime', null, '18:00');
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '2px 8px', fontSize: '0.72rem' }}
+                  >
+                    09:00 - 18:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDayFieldChange(index, 'startTime', null, '09:00');
+                      handleDayFieldChange(index, 'endTime', null, '21:00');
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '2px 8px', fontSize: '0.72rem' }}
+                  >
+                    09:00 - 21:00
+                  </button>
+                </div>
               </div>
 
               {/* Khmer Label */}

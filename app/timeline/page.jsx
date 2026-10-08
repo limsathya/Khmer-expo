@@ -78,12 +78,12 @@ export default function TimelinePage() {
       ? timelineDays.map((d, index) => ({
           key: d.date,
           label: d.label?.[language] || d.label?.en || `Day ${d.day || index + 1}`,
-          sublabel: d.date
+          sublabel: (d.startTime && d.endTime) ? `${d.date} • ${d.startTime}–${d.endTime}` : d.date
         }))
       : [
-          { key: '2026-10-12', label: t('timeline.day1', 'Day 1'), sublabel: 'Oct 12' },
-          { key: '2026-10-13', label: t('timeline.day2', 'Day 2'), sublabel: 'Oct 13' },
-          { key: '2026-10-14', label: t('timeline.day3', 'Day 3'), sublabel: 'Oct 14' },
+          { key: '2026-10-12', label: t('timeline.day1', 'Day 1'), sublabel: 'Oct 12 • 08:30–18:00' },
+          { key: '2026-10-13', label: t('timeline.day2', 'Day 2'), sublabel: 'Oct 13 • 09:00–18:00' },
+          { key: '2026-10-14', label: t('timeline.day3', 'Day 3'), sublabel: 'Oct 14 • 09:00–21:00' },
         ])
   ];
 
@@ -320,12 +320,31 @@ export default function TimelinePage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)'
+                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
+                flexWrap: 'wrap'
               }}>
                 <Calendar size={16} />
                 <span>{dayNumber}</span>
                 <span style={{ opacity: 0.7, fontWeight: '400' }}>•</span>
                 <span>{formattedDate}</span>
+                {(matchedDay?.startTime && matchedDay?.endTime) && (
+                  <>
+                    <span style={{ opacity: 0.7, fontWeight: '400' }}>•</span>
+                    <span style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '5px', 
+                      background: 'rgba(255, 255, 255, 0.18)', 
+                      padding: '2px 8px', 
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: '700'
+                    }}>
+                      <Clock size={13} />
+                      <span>{formatTimeString(matchedDay.startTime, matchedDay.endTime)}</span>
+                    </span>
+                  </>
+                )}
               </div>
               {dayTheme && (
                 <div style={{

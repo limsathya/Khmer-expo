@@ -63,7 +63,7 @@ const ALL_DEFAULT_COMMITTEES = [
 export default function AdminDashboardPage() {
   const { user, isAdmin, isExecutiveAdmin, isReceptionAndProtocol: userIsProtocol, canManageEverything, canManageEvent, userCommittee, loading: authLoading, login } = useAuth();
   const { t, language } = useLanguage();
-  const { categories, getCategoryMeta, getCategoryName } = useSettings();
+  const { categories, getCategoryMeta, getCategoryName, getTimelineDays } = useSettings();
 
   const formatTimeString = (time, endTime) => {
     if (!time) return '';
@@ -1883,23 +1883,45 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
                 <div>
                   <label className="form-label">{t('submit.fieldDate', 'Expo Date')}</label>
                   <select
                     value={eventFormData.date}
-                    onChange={(e) => setEventFormData({ ...eventFormData, date: e.target.value })}
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      const matchedDay = (getTimelineDays ? getTimelineDays() : []).find(d => d.date === newDate);
+                      setEventFormData(prev => ({
+                        ...prev,
+                        date: newDate,
+                        time: (!prev.time || prev.time === '10:00') && matchedDay?.startTime ? matchedDay.startTime : prev.time,
+                        endTime: (!prev.endTime || prev.endTime === '16:00') && matchedDay?.endTime ? matchedDay.endTime : prev.endTime
+                      }));
+                    }}
                     className="form-select"
                   >
-                    <option value="2026-10-12">{language === 'km' ? 'ថ្ងៃទី១: ១២ តុលា' : language === 'zh' ? '第1天：10月12日' : 'Day 1: Oct 12'}</option>
-                    <option value="2026-10-13">{language === 'km' ? 'ថ្ងៃទី២: ១៣ តុលា' : language === 'zh' ? '第2天：10月13日' : 'Day 2: Oct 13'}</option>
-                    <option value="2026-10-14">{language === 'km' ? 'ថ្ងៃទី៣: ១៤ តុលា' : language === 'zh' ? '第3天：10月14日' : 'Day 3: Oct 14'}</option>
+                    {(getTimelineDays ? getTimelineDays() : []).length > 0 ? (
+                      getTimelineDays().map((d, idx) => (
+                        <option key={d.date || idx} value={d.date}>
+                          {d.label?.[language] || d.label?.en || `Day ${d.day || idx + 1}`}: {d.date} {d.startTime ? `(${d.startTime}–${d.endTime})` : ''}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="2026-10-12">{language === 'km' ? 'ថ្ងៃទី១: ១២ តុលា' : language === 'zh' ? '第1天：10月12日' : 'Day 1: Oct 12'} (08:30–18:00)</option>
+                        <option value="2026-10-13">{language === 'km' ? 'ថ្ងៃទី២: ១៣ តុលា' : language === 'zh' ? '第2天：10月13日' : 'Day 2: Oct 13'} (09:00–18:00)</option>
+                        <option value="2026-10-14">{language === 'km' ? 'ថ្ងៃទី៣: ១៤ តុលា' : language === 'zh' ? '第3天：10月14日' : 'Day 3: Oct 14'} (09:00–21:00)</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">{t('submit.fieldStartTime', 'Start Time')}</label>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Clock size={12} color="var(--primary)" />
+                    <span>{t('submit.fieldStartTime', 'Start Time')} (24h)</span>
+                  </label>
                   <input
-                    type="text"
+                    type="time"
                     value={eventFormData.time}
                     onChange={(e) => setEventFormData({ ...eventFormData, time: e.target.value })}
                     className="form-input"
@@ -1907,9 +1929,12 @@ export default function AdminDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="form-label">{t('submit.fieldEndTime', 'End Time')}</label>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Clock size={12} color="var(--primary)" />
+                    <span>{t('submit.fieldEndTime', 'End Time')} (24h)</span>
+                  </label>
                   <input
-                    type="text"
+                    type="time"
                     value={eventFormData.endTime}
                     onChange={(e) => setEventFormData({ ...eventFormData, endTime: e.target.value })}
                     className="form-input"
@@ -1917,6 +1942,27 @@ export default function AdminDashboardPage() {
                   />
                 </div>
               </div>
+
+              {/* Time formatting live helper pill */}
+              {(eventFormData.time || eventFormData.endTime) && (
+                <div style={{
+                  background: 'rgba(99, 102, 241, 0.08)',
+                  border: '1px dashed rgba(99, 102, 241, 0.25)',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '0.78rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: 'var(--text-muted)'
+                }}>
+                  <Clock size={13} color="var(--primary)" />
+                  <span>{language === 'km' ? 'កាលវិភាគម៉ោងលើ Timeline:' : language === 'zh' ? '时间线展示格式:' : 'Timeline Display Time:'}</span>
+                  <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                    {formatTimeString(eventFormData.time, eventFormData.endTime)}
+                  </strong>
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 <div>

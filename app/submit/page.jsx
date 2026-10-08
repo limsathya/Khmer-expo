@@ -39,6 +39,25 @@ export default function SubmitProposalPage() {
   const [adminAuthLoading, setAdminAuthLoading] = useState(false);
   const [subCommittees, setSubCommittees] = useState(SUB_COMMITTEES);
 
+  const formatTimeString = (time, endTime) => {
+    if (!time) return '';
+    const to12h = (tStr) => {
+      if (!tStr) return '';
+      const [hStr, mStr] = tStr.split(':');
+      let h = parseInt(hStr, 10);
+      if (isNaN(h)) return tStr;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${mStr || '00'} ${ampm}`;
+    };
+    const s12 = to12h(time);
+    const e12 = to12h(endTime);
+    if (endTime) {
+      return `${time} – ${endTime} (${s12} – ${e12})`;
+    }
+    return `${time} (${s12})`;
+  };
+
   useEffect(() => {
     fetch('/api/committees')
       .then(res => res.ok ? res.json() : null)
@@ -449,23 +468,26 @@ export default function SubmitProposalPage() {
                 {timelineDays && timelineDays.length > 0 ? (
                   timelineDays.map((td, idx) => (
                     <option key={td.dayNumber || idx} value={td.date}>
-                      {td.label?.[language] || `Day ${td.dayNumber || idx + 1}`}: {td.date}
+                      {td.label?.[language] || `Day ${td.dayNumber || idx + 1}`}: {td.date} {(td.startTime && td.endTime) ? `(${td.startTime}–${td.endTime})` : ''}
                     </option>
                   ))
                 ) : (
                   <>
-                    <option value="2026-10-12">{language === 'km' ? 'ថ្ងៃទី ១: តុលា ១២, ២០២៦' : language === 'zh' ? '第1天: 2026年10月12日' : 'Day 1: Oct 12, 2026'}</option>
-                    <option value="2026-10-13">{language === 'km' ? 'ថ្ងៃទី ២: តុលា ១៣, ២០២៦' : language === 'zh' ? '第2天: 2026年10月13日' : 'Day 2: Oct 13, 2026'}</option>
-                    <option value="2026-10-14">{language === 'km' ? 'ថ្ងៃទី ៣: តុលា ១៤, ២០២៦' : language === 'zh' ? '第3天: 2026年10月14日' : 'Day 3: Oct 14, 2026'}</option>
+                    <option value="2026-10-12">{language === 'km' ? 'ថ្ងៃទី ១: តុលា ១២, ២០២៦' : language === 'zh' ? '第1天: 2026年10月12日' : 'Day 1: Oct 12, 2026'} (08:30–18:00)</option>
+                    <option value="2026-10-13">{language === 'km' ? 'ថ្ងៃទី ២: តុលា ១៣, ២០២៦' : language === 'zh' ? '第2天: 2026年10月13日' : 'Day 2: Oct 13, 2026'} (09:00–18:00)</option>
+                    <option value="2026-10-14">{language === 'km' ? 'ថ្ងៃទី ៣: តុលា ១៤, ២០២៦' : language === 'zh' ? '第3天: 2026年10月14日' : 'Day 3: Oct 14, 2026'} (09:00–21:00)</option>
                   </>
                 )}
               </select>
             </div>
 
             <div>
-              <label className="form-label">{t('submit.fieldStartTime')}</label>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Clock size={13} color="var(--primary)" />
+                <span>{t('submit.fieldStartTime')} (24h)</span>
+              </label>
               <input
-                type="text"
+                type="time"
                 name="time"
                 placeholder="10:00"
                 value={formData.time}
@@ -475,9 +497,12 @@ export default function SubmitProposalPage() {
             </div>
 
             <div>
-              <label className="form-label">{t('submit.fieldEndTime')}</label>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Clock size={13} color="var(--primary)" />
+                <span>{t('submit.fieldEndTime')} (24h)</span>
+              </label>
               <input
-                type="text"
+                type="time"
                 name="endTime"
                 placeholder="16:00"
                 value={formData.endTime}
@@ -486,6 +511,27 @@ export default function SubmitProposalPage() {
               />
             </div>
           </div>
+
+          {/* Time live format preview */}
+          {(formData.time || formData.endTime) && (
+            <div style={{
+              background: 'rgba(99, 102, 241, 0.08)',
+              border: '1px dashed rgba(99, 102, 241, 0.25)',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'var(--text-muted)'
+            }}>
+              <Clock size={14} color="var(--primary)" />
+              <span>{language === 'km' ? 'កាលវិភាគម៉ោងលើ Timeline:' : language === 'zh' ? '时间线展示格式:' : 'Timeline Display Time:'}</span>
+              <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                {formatTimeString(formData.time, formData.endTime)}
+              </strong>
+            </div>
+          )}
 
           {/* Location & Booth Number Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px' }}>
