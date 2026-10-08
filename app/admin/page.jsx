@@ -592,6 +592,28 @@ export default function AdminDashboardPage() {
   };
   const presetReasons = presetReasonsByLang[language] || presetReasonsByLang.en;
 
+  // Filtered Events (Optimized with useMemo - called unconditionally at top of component)
+  const filteredEvents = useMemo(() => {
+    return events.filter(e => {
+      if (statusFilter !== 'all' && e.status !== statusFilter) return false;
+      if (categoryFilter !== 'all' && e.category !== categoryFilter) return false;
+      if (committeeFilter !== 'all' && e.subCommittee !== committeeFilter) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = e.title?.toLowerCase().includes(q);
+        const matchOrg = e.organizer?.toLowerCase().includes(q);
+        const matchUser = (e.contactUsername || e.contactEmail)?.toLowerCase().includes(q);
+        const matchBooth = e.boothNumber?.toLowerCase().includes(q);
+        const matchLoc = e.location?.toLowerCase().includes(q);
+        const matchComm = e.subCommittee?.toLowerCase().includes(q);
+        if (!matchTitle && !matchOrg && !matchUser && !matchBooth && !matchLoc && !matchComm) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [events, statusFilter, categoryFilter, committeeFilter, searchQuery]);
+
   // If user is not admin or committee officer, show Authentication Gate
   if (authLoading) {
     return (
@@ -698,28 +720,6 @@ export default function AdminDashboardPage() {
       </div>
     );
   }
-
-  // Filtered Events (Optimized with useMemo)
-  const filteredEvents = useMemo(() => {
-    return events.filter(e => {
-      if (statusFilter !== 'all' && e.status !== statusFilter) return false;
-      if (categoryFilter !== 'all' && e.category !== categoryFilter) return false;
-      if (committeeFilter !== 'all' && e.subCommittee !== committeeFilter) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchTitle = e.title?.toLowerCase().includes(q);
-        const matchOrg = e.organizer?.toLowerCase().includes(q);
-        const matchUser = (e.contactUsername || e.contactEmail)?.toLowerCase().includes(q);
-        const matchBooth = e.boothNumber?.toLowerCase().includes(q);
-        const matchLoc = e.location?.toLowerCase().includes(q);
-        const matchComm = e.subCommittee?.toLowerCase().includes(q);
-        if (!matchTitle && !matchOrg && !matchUser && !matchBooth && !matchLoc && !matchComm) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [events, statusFilter, categoryFilter, committeeFilter, searchQuery]);
 
   const getStatusBadge = (status) => {
     switch (status) {

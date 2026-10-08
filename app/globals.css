@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300..900;1,300..900&family=Noto+Serif+Khmer:wght@300..900&family=Noto+Serif+SC:wght@300..900&display=swap');
 @import "tailwindcss";
+@source "../components";
+@source "../app";
 
 @theme {
   --color-royal-blue: #0f2b5c;
