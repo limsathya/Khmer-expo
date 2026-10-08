@@ -14,6 +14,10 @@ const SettingsContext = createContext({
   getExpoDatesRange: (lang = 'en') => 'October 12–14, 2026',
   getExpoVenue: (lang = 'en') => 'Phnom Penh Convention Center',
   getTimelineDays: () => [],
+  getZones: () => [],
+  getZone: (key) => null,
+  getZoneName: (key, lang = 'en') => key,
+  getZoneMeta: (key, lang = 'en') => ({}),
   getCategory: (key) => null,
   getCategoryName: (key, lang = 'en') => key,
   getCategoryMeta: (key, lang = 'en') => ({}),
@@ -53,7 +57,8 @@ export function SettingsProvider({ children }) {
           heroSubtitle: { ...prev.heroSubtitle, ...(data.heroSubtitle || {}) },
           venue: { ...prev.venue, ...(data.venue || {}) },
           datesRange: { ...prev.datesRange, ...(data.datesRange || {}) },
-          timelineDays: data.timelineDays || prev.timelineDays
+          timelineDays: data.timelineDays || prev.timelineDays,
+          zones: data.zones || prev.zones || DEFAULT_EXPO_CONFIG.zones
         }));
       }
     } catch (err) {
@@ -101,6 +106,56 @@ export function SettingsProvider({ children }) {
 
   const getTimelineDays = () => {
     return Array.isArray(expoConfig.timelineDays) ? expoConfig.timelineDays : DEFAULT_EXPO_CONFIG.timelineDays;
+  };
+
+  const getZones = () => {
+    return Array.isArray(expoConfig.zones) && expoConfig.zones.length > 0
+      ? expoConfig.zones
+      : (DEFAULT_EXPO_CONFIG.zones || []);
+  };
+
+  const getZone = (idOrCodeOrName) => {
+    if (!idOrCodeOrName) return null;
+    const list = getZones();
+    const q = String(idOrCodeOrName).trim().toLowerCase();
+    return list.find(z => 
+      z.id?.toLowerCase() === q || 
+      z.code?.toLowerCase() === q || 
+      z.name?.en?.toLowerCase() === q ||
+      z.name?.km?.toLowerCase() === q ||
+      z.name?.zh?.toLowerCase() === q
+    ) || null;
+  };
+
+  const getZoneName = (idOrCodeOrName, lang = 'en') => {
+    if (!idOrCodeOrName) return '';
+    const z = getZone(idOrCodeOrName);
+    if (z) return z.name?.[lang] || z.name?.en || z.code || idOrCodeOrName;
+    return idOrCodeOrName;
+  };
+
+  const getZoneMeta = (idOrCodeOrName, lang = 'en') => {
+    const z = getZone(idOrCodeOrName);
+    if (z) {
+      return {
+        id: z.id,
+        code: z.code,
+        name: z.name?.[lang] || z.name?.en || z.code,
+        description: z.description?.[lang] || z.description?.en || '',
+        capacity: z.capacity || '',
+        color: z.color || '#6366f1',
+        icon: z.icon || '🏛️'
+      };
+    }
+    return {
+      id: idOrCodeOrName,
+      code: '',
+      name: idOrCodeOrName,
+      description: '',
+      capacity: '',
+      color: '#6366f1',
+      icon: '📍'
+    };
   };
 
   const getCategory = (key) => {
@@ -217,6 +272,10 @@ export function SettingsProvider({ children }) {
       getExpoDatesRange,
       getExpoVenue,
       getTimelineDays,
+      getZones,
+      getZone,
+      getZoneName,
+      getZoneMeta,
       getCategory,
       getCategoryName,
       getCategoryMeta,

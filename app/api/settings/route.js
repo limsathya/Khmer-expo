@@ -4,7 +4,13 @@ import { getSiteSettingsFromDB, updateSiteSettingsInDB, DEFAULT_EXPO_CONFIG } fr
 export async function GET() {
   try {
     const config = await getSiteSettingsFromDB('expo_config');
-    return NextResponse.json(config || DEFAULT_EXPO_CONFIG);
+    const merged = {
+      ...DEFAULT_EXPO_CONFIG,
+      ...(config || {}),
+      zones: (Array.isArray(config?.zones) && config.zones.length > 0) ? config.zones : DEFAULT_EXPO_CONFIG.zones,
+      timelineDays: (Array.isArray(config?.timelineDays) && config.timelineDays.length > 0) ? config.timelineDays : DEFAULT_EXPO_CONFIG.timelineDays
+    };
+    return NextResponse.json(merged);
   } catch (error) {
     console.error('Error fetching site settings:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -29,7 +35,8 @@ export async function PATCH(request) {
       heroSubtitle: { ...(current.heroSubtitle || {}), ...(body.heroSubtitle || {}) },
       venue: { ...(current.venue || {}), ...(body.venue || {}) },
       datesRange: { ...(current.datesRange || {}), ...(body.datesRange || {}) },
-      timelineDays: body.timelineDays || current.timelineDays
+      timelineDays: body.timelineDays || current.timelineDays || DEFAULT_EXPO_CONFIG.timelineDays,
+      zones: body.zones || current.zones || DEFAULT_EXPO_CONFIG.zones
     };
 
     const saved = await updateSiteSettingsInDB('expo_config', updated);

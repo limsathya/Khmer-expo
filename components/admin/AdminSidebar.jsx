@@ -12,6 +12,7 @@ import {
   Shield, 
   Sparkles, 
   Database, 
+  MapPin,
   ChevronLeft, 
   ChevronRight, 
   ExternalLink,
@@ -25,6 +26,7 @@ export default function AdminSidebar({
   setActiveSection,
   eventsCount = 0,
   categoriesCount = 0,
+  zonesCount = 6,
   committeesCount = 10,
   usersCount = 1,
   dbConnected = false,
@@ -57,6 +59,12 @@ export default function AdminSidebar({
           key: 'timeline', 
           label: language === 'km' ? 'កាលវិភាគ Timeline' : language === 'zh' ? '时间线日程' : 'Timeline Schedule', 
           icon: Calendar 
+        },
+        { 
+          key: 'zones', 
+          label: language === 'km' ? 'ទីតាំង & សាលពិព័រណ៍' : language === 'zh' ? '展区与展厅' : 'Zones & Halls', 
+          icon: MapPin, 
+          count: zonesCount 
         },
       ]
     },

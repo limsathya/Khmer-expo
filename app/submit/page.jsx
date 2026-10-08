@@ -30,8 +30,9 @@ export default function SubmitProposalPage() {
   const router = useRouter();
   const { user, isAdmin, loading: authLoading, login } = useAuth();
   const { t, language } = useLanguage();
-  const { getTimelineDays, categories } = useSettings();
+  const { getTimelineDays, categories, getZones } = useSettings();
   const timelineDays = getTimelineDays();
+  const configuredZones = getZones ? getZones() : [];
 
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
@@ -536,15 +537,42 @@ export default function SubmitProposalPage() {
           {/* Location & Booth Number Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px' }}>
             <div>
-              <label className="form-label">{t('submit.fieldLocation')}</label>
-              <input
-                type="text"
-                name="location"
-                placeholder={t('submit.fieldLocationPlaceholder')}
-                value={formData.location}
-                onChange={handleChange}
-                className="form-input"
-              />
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>{t('submit.fieldLocation')} *</span>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                  {language === 'km' ? 'ជ្រើសរើស ឬសរសេរបញ្ចូល' : language === 'zh' ? '可快捷选择或自定义' : 'Select or type'}
+                </span>
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <select
+                  value={configuredZones.some(z => (z.name?.[language] || z.name?.en || z.code) === formData.location) ? formData.location : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setFormData(prev => ({ ...prev, location: e.target.value }));
+                    }
+                  }}
+                  className="form-select"
+                >
+                  <option value="">{language === 'km' ? '-- ជ្រើសរើសសាល / តំបន់ពិព័រណ៍ដែលចង់បាន --' : language === 'zh' ? '-- 快捷选择已配置展区/展厅 --' : '-- Select Requested Zone / Hall --'}</option>
+                  {configuredZones.map(z => {
+                    const zName = z.name?.[language] || z.name?.en || z.code;
+                    return (
+                      <option key={z.id || z.code} value={zName}>
+                        {z.icon || '🏛️'} {zName} ({z.code})
+                      </option>
+                    );
+                  })}
+                </select>
+
+                <input
+                  type="text"
+                  name="location"
+                  placeholder={t('submit.fieldLocationPlaceholder')}
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="form-input"
+                />
+              </div>
             </div>
 
             <div>

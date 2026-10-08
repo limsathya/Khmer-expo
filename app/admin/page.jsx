@@ -51,6 +51,7 @@ import InvitesManager from '@/components/admin/InvitesManager';
 import MembersManager from '@/components/admin/MembersManager';
 import IdentityManager from '@/components/admin/IdentityManager';
 import TimelineManager from '@/components/admin/TimelineManager';
+import ZonesManager from '@/components/admin/ZonesManager';
 import TranslationsManager from '@/components/admin/TranslationsManager';
 import CategoriesManager from '@/components/admin/CategoriesManager';
 import CommitteesManager from '@/components/admin/CommitteesManager';
@@ -63,7 +64,7 @@ const ALL_DEFAULT_COMMITTEES = [
 export default function AdminDashboardPage() {
   const { user, isAdmin, isExecutiveAdmin, isReceptionAndProtocol: userIsProtocol, canManageEverything, canManageEvent, userCommittee, loading: authLoading, login } = useAuth();
   const { t, language } = useLanguage();
-  const { categories, getCategoryMeta, getCategoryName, getTimelineDays } = useSettings();
+  const { categories, getCategoryMeta, getCategoryName, getTimelineDays, getZones, getZoneName } = useSettings();
 
   const formatTimeString = (time, endTime) => {
     if (!time) return '';
@@ -785,6 +786,7 @@ export default function AdminDashboardPage() {
         setActiveSection={setActiveSection}
         eventsCount={events.length}
         categoriesCount={categories.length}
+        zonesCount={(getZones ? getZones() : []).length}
         committeesCount={committeesList.length}
         usersCount={usersList.length}
         dbConnected={Boolean(dbStatus?.connected)}
@@ -1512,6 +1514,13 @@ export default function AdminDashboardPage() {
       )}
 
       {/* =========================================================================
+          SECTION: ZONES & HALLS (REQUESTED ZONE / HALL) MANAGER
+          ========================================================================= */}
+      {activeSection === 'zones' && (
+        <ZonesManager showToast={showToast} />
+      )}
+
+      {/* =========================================================================
           SECTION: MULTILINGUAL TRANSLATIONS CENTER
           ========================================================================= */}
       {activeSection === 'translations' && (
@@ -1966,14 +1975,42 @@ export default function AdminDashboardPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 <div>
-                  <label className="form-label">{t('submit.fieldLocation', 'Location / Zone')}</label>
-                  <input
-                    type="text"
-                    value={eventFormData.location}
-                    onChange={(e) => setEventFormData({ ...eventFormData, location: e.target.value })}
-                    className="form-input"
-                    placeholder="Hall A Pavilion"
-                  />
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>{t('submit.fieldLocation', 'Location / Zone')}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                      {language === 'km' ? 'ជ្រើសរើស ឬសរសេរបញ្ចូល' : language === 'zh' ? '可选择或自定义' : 'Select or type'}
+                    </span>
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <select
+                      value={(getZones ? getZones() : []).some(z => (z.name?.[language] || z.name?.en || z.code) === eventFormData.location) ? eventFormData.location : ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setEventFormData({ ...eventFormData, location: e.target.value });
+                        }
+                      }}
+                      className="form-select"
+                      style={{ fontSize: '0.85rem' }}
+                    >
+                      <option value="">{language === 'km' ? '-- ជ្រើសរើសសាល / តំបន់ (Configured Halls) --' : language === 'zh' ? '-- 快捷选择已配置展区/展厅 --' : '-- Select Configured Zone / Hall --'}</option>
+                      {(getZones ? getZones() : []).map(z => {
+                        const zName = z.name?.[language] || z.name?.en || z.code;
+                        return (
+                          <option key={z.id || z.code} value={zName}>
+                            {z.icon || '🏛️'} {zName} ({z.code})
+                          </option>
+                        );
+                      })}
+                    </select>
+
+                    <input
+                      type="text"
+                      value={eventFormData.location}
+                      onChange={(e) => setEventFormData({ ...eventFormData, location: e.target.value })}
+                      className="form-input"
+                      placeholder={language === 'km' ? 'ឧ. សាលពិព័រណ៍ B ឬទីតាំងជាក់លាក់' : language === 'zh' ? '例如：B号展览馆或具体展区' : 'e.g. Exhibition Hall B'}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="form-label">{t('submit.fieldBooth', 'Booth Number')}</label>
