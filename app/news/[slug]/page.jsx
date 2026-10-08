@@ -14,8 +14,8 @@ import {
 import { useLanguage } from '@/components/LanguageProvider';
 
 export default function NewsDetailPage({ params }) {
-  const unwrappedParams = use(params);
-  const slug = unwrappedParams.slug;
+  const unwrappedParams = typeof params?.then === 'function' ? use(params) : params;
+  const slug = unwrappedParams?.slug;
   const { language } = useLanguage();
 
   const [article, setArticle] = useState(null);

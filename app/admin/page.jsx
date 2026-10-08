@@ -67,13 +67,15 @@ import CheckinManager from '@/components/admin/CheckinManager';
 import SponsorsManager from '@/components/admin/SponsorsManager';
 import NewsManager from '@/components/admin/NewsManager';
 import ReportsManager from '@/components/admin/ReportsManager';
+import CompaniesManager from '@/components/admin/CompaniesManager';
+import GalleryManager from '@/components/admin/GalleryManager';
 
 const ALL_DEFAULT_COMMITTEES = [
   { ...MAIN_COMMITTEE, type: 'main' },
   ...SUB_COMMITTEES.map(s => ({ ...s, type: 'sub' }))
 ];
 
-export default function AdminDashboardPage() {
+export default function AdminDashboardPage({ initialSection = 'events' }) {
   const { user, isAdmin, isExecutiveAdmin, isReceptionAndProtocol: userIsProtocol, canManageEverything, canManageEvent, userCommittee, loading: authLoading, login } = useAuth();
   const { t, language } = useLanguage();
   const { categories, getCategoryMeta, getCategoryName, getTimelineDays, getZones, getZoneName } = useSettings();
@@ -98,9 +100,25 @@ export default function AdminDashboardPage() {
   };
 
   // Active Section Tab & Sidebar State
-  const [activeSection, setActiveSection] = useState('events');
+  const [activeSection, setActiveSection] = useState(initialSection || 'events');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialSection) {
+      setActiveSection(initialSection);
+    }
+  }, [initialSection]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      const querySec = sp.get('section');
+      if (querySec) {
+        setActiveSection(querySec);
+      }
+    }
+  }, []);
 
   // --- EVENTS STATE ---
   const [events, setEvents] = useState([]);
@@ -1564,6 +1582,10 @@ export default function AdminDashboardPage() {
         <ExhibitorsManager showToast={showToast} />
       )}
 
+      {activeSection === 'companies' && (
+        <CompaniesManager showToast={showToast} />
+      )}
+
       {activeSection === 'booths' && (
         <BoothsManager showToast={showToast} />
       )}
@@ -1598,6 +1620,10 @@ export default function AdminDashboardPage() {
 
       {activeSection === 'news' && (
         <NewsManager showToast={showToast} />
+      )}
+
+      {activeSection === 'gallery' && (
+        <GalleryManager showToast={showToast} />
       )}
 
       {activeSection === 'reports' && (

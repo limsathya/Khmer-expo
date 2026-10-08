@@ -17,8 +17,8 @@ import {
 import { useLanguage } from '@/components/LanguageProvider';
 
 export default function ExhibitorDetailPage({ params }) {
-  const unwrappedParams = use(params);
-  const slug = unwrappedParams.slug;
+  const unwrappedParams = typeof params?.then === 'function' ? use(params) : params;
+  const slug = unwrappedParams?.slug;
   const { language } = useLanguage();
 
   const [exhibitor, setExhibitor] = useState(null);

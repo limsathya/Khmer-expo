@@ -25,7 +25,9 @@ import {
   CheckSquare,
   FileText,
   BarChart3,
-  LayoutDashboard
+  LayoutDashboard,
+  Briefcase,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function AdminSidebar({
@@ -69,6 +71,11 @@ export default function AdminSidebar({
           key: 'exhibitors', 
           label: language === 'km' ? 'អ្នកតាំងពិព័រណ៍ (Exhibitors)' : language === 'zh' ? '参展商 (Exhibitors)' : 'Exhibitors', 
           icon: Building2 
+        },
+        { 
+          key: 'companies', 
+          label: language === 'km' ? 'ក្រុមហ៊ុន & សហគ្រាស (Companies)' : language === 'zh' ? '参展企业 (Companies)' : 'Companies Directory', 
+          icon: Briefcase 
         },
         { 
           key: 'booths', 
@@ -142,6 +149,11 @@ export default function AdminSidebar({
           icon: FileText 
         },
         { 
+          key: 'gallery', 
+          label: language === 'km' ? 'វិចិត្រសាលរូបភាព (Gallery)' : language === 'zh' ? '活动画廊 (Gallery)' : 'Gallery & Media', 
+          icon: ImageIcon 
+        },
+        { 
           key: 'categories', 
           label: language === 'km' ? 'ប្រភេទព្រឹត្តិការណ៍' : language === 'zh' ? '展会分类' : 'Categories', 
           icon: Tag, 
@@ -191,6 +203,9 @@ export default function AdminSidebar({
 
   const handleSelect = (key) => {
     setActiveSection(key);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', key === 'events' ? '/admin' : `/admin/${key}`);
+    }
     if (mobileOpen) {
       setMobileOpen(false);
     }
