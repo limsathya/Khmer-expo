@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { useLanguage } from '@/components/LanguageProvider';
+import { getSubCommitteeLocalizedName } from '@/lib/committees';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,9 +35,63 @@ export default function LoginPage() {
   const [regName, setRegName] = useState('');
   const [regCode, setRegCode] = useState('');
 
+  // Roster members for choosing name directly (choose not write)
+  const [rosterMembers, setRosterMembers] = useState([]);
+  const [selectedRosterMemberId, setSelectedRosterMemberId] = useState('');
+  const [isManualName, setIsManualName] = useState(false);
+  const [selectedMemberInfo, setSelectedMemberInfo] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Load roster members when switching to register mode
+  useEffect(() => {
+    if (mode === 'register' && rosterMembers.length === 0) {
+      fetch('/api/committees/members')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setRosterMembers(data);
+        })
+        .catch(err => console.error('Error fetching roster members for registration:', err));
+    }
+  }, [mode, rosterMembers.length]);
+
+  // Group roster members by committee
+  const rosterByCommittee = useMemo(() => {
+    const map = {};
+    rosterMembers.forEach(m => {
+      const comm = m.committee || m.committeeName || m.committeeKey || 'Central Committee';
+      if (!map[comm]) map[comm] = [];
+      map[comm].push(m);
+    });
+    return map;
+  }, [rosterMembers]);
+
+  // When a member is chosen from the roster
+  const handleSelectRosterMember = (val) => {
+    setSelectedRosterMemberId(val);
+    if (!val) {
+      setSelectedMemberInfo(null);
+      setRegName('');
+      return;
+    }
+    const mem = rosterMembers.find(m => (m.id === val || m.name === val));
+    if (mem) {
+      setSelectedMemberInfo(mem);
+      setRegName(mem.name);
+      if (!regUsername) {
+        // Suggest a clean username from their name
+        const cleanUser = mem.name
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]/g, '_')
+          .replace(/_+/g, '_')
+          .replace(/^_|_$/g, '');
+        setRegUsername(cleanUser);
+      }
+    }
+  };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -273,20 +328,76 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Member Identity Selection (Choose not write) */}
             <div>
-              <label className="form-label">{t('auth.fullNameLabel', 'Full Name')}</label>
-              <div style={{ position: 'relative' }}>
-                <User size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Alex Morgan"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="form-input"
-                  style={{ paddingLeft: '40px' }}
-                />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>
+                  <span style={{ color: 'var(--primary)', fontWeight: '800' }}>* </span>
+                  {language === 'km' ? 'ជ្រើសរើសឈ្មោះសមាជិក (Member Identity)' : language === 'zh' ? '选择委员会成员姓名' : 'Select Member Identity'}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsManualName(!isManualName);
+                    if (!isManualName) {
+                      setRegName('');
+                      setSelectedRosterMemberId('');
+                      setSelectedMemberInfo(null);
+                    }
+                  }}
+                  style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  {isManualName 
+                    ? (language === 'km' ? '👥 ជ្រើសរើសពីបញ្ជីឈ្មោះ' : language === 'zh' ? '👥 从名册中选择' : '👥 Choose from Roster')
+                    : (language === 'km' ? '✏️ វាយឈ្មោះដោយផ្ទាល់' : language === 'zh' ? '✏️ 手动输入' : '✏️ Type Manually')}
+                </button>
               </div>
+
+              {!isManualName ? (
+                <div style={{ position: 'relative' }}>
+                  <User size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                  <select
+                    required
+                    value={selectedRosterMemberId}
+                    onChange={(e) => handleSelectRosterMember(e.target.value)}
+                    className="form-input"
+                    style={{ paddingLeft: '40px' }}
+                  >
+                    <option value="">
+                      {language === 'km' ? '-- សូមជ្រើសរើសឈ្មោះរបស់អ្នកពីបញ្ជីឈ្មោះ --' : language === 'zh' ? '-- 请从委员会花名册中选择您的姓名 --' : '-- Choose your name from Committee Roster --'}
+                    </option>
+                    {Object.entries(rosterByCommittee).map(([commName, members]) => (
+                      <optgroup key={commName} label={getSubCommitteeLocalizedName(commName, language) || commName}>
+                        {members.map(m => (
+                          <option key={m.id || m.name} value={m.id || m.name}>
+                            👤 {m.name} — {m.role}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div style={{ position: 'relative' }}>
+                  <User size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Alex Morgan"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    className="form-input"
+                    style={{ paddingLeft: '40px' }}
+                  />
+                </div>
+              )}
+
+              {selectedMemberInfo && !isManualName && (
+                <div style={{ marginTop: '6px', fontSize: '0.74rem', color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.1)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(99, 102, 241, 0.2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>✓</span>
+                  <span><strong>{selectedMemberInfo.name}</strong> • {getSubCommitteeLocalizedName(selectedMemberInfo.committee, language) || selectedMemberInfo.committee} ({selectedMemberInfo.role})</span>
+                </div>
+              )}
             </div>
 
             <div>

@@ -21,6 +21,22 @@ import { useAuth } from '@/components/AuthProvider';
 import { useLanguage } from '@/components/LanguageProvider';
 import { ALL_COMMITTEES_LIST, getSubCommitteeLocalizedName } from '@/lib/committees';
 
+// Standard official committee roles for dropdown selection (Choose not write)
+const OFFICIAL_ROLE_OPTIONS = [
+  { value: 'Committee Member', km: 'សមាជិកគណៈកម្មការ (Committee Member)', zh: '委员会委员' },
+  { value: 'President of the Subcommittee', km: 'ប្រធានអនុគណៈកម្មការ (President of Subcommittee)', zh: '分委员会主席' },
+  { value: 'President of the Committee', km: 'ប្រធានគណៈកម្មការធំ (President of Committee)', zh: '总委员会主席' },
+  { value: 'Co-President of the Subcommittee', km: 'សហប្រធានអនុគណៈកម្មការ (Co-President)', zh: '分委员会共同主席' },
+  { value: 'Secretary', km: 'លេខាធិការ (Secretary)', zh: '秘书长 / 秘书' },
+  { value: 'Protocol Officer', km: 'មន្ត្រីពិធីការ (Protocol Officer)', zh: '礼宾官员' },
+  { value: 'Finance Specialist', km: 'អ្នកឯកទេសហិរញ្ញវត្ថុ (Finance Specialist)', zh: '财务专员' },
+  { value: 'Stage & Booth Coordinator', km: 'អ្នកសម្របសម្រួលឆាក និងស្ដង់ (Booth Coordinator)', zh: '展位与舞台协调员' },
+  { value: 'Logistics Coordinator', km: 'អ្នកសម្របសម្រួលភស្តុភារ (Logistics Coordinator)', zh: '后勤专员' },
+  { value: 'PR & Media Officer', km: 'មន្ត្រីព័ត៌មាន និងផ្សព្វផ្សាយ (PR & Media)', zh: '宣传与公关专员' },
+  { value: 'Security & Safety Officer', km: 'មន្ត្រីសន្តិសុខ និងសណ្ដាប់ធ្នាប់ (Security Officer)', zh: '安保专员' },
+  { value: 'Volunteer Coordinator', km: 'អ្នកសម្របសម្រួលអ្នកស្ម័គ្រចិត្ត (Volunteer Coordinator)', zh: '志愿者协调员' }
+];
+
 export default function InvitesManager({ showToast }) {
   const { user, canManageEverything, userCommittee } = useAuth();
   const { t, language } = useLanguage();
@@ -29,10 +45,17 @@ export default function InvitesManager({ showToast }) {
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
 
+  // Roster members for choosing invitees
+  const [allMembers, setAllMembers] = useState([]);
+  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [isCustomInvitee, setIsCustomInvitee] = useState(false);
+
   // Generate code modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [targetCommittee, setTargetCommittee] = useState(userCommittee || 'Subcommittee on Reception and Protocol');
   const [targetRole, setTargetRole] = useState('Committee Member');
+  const [isCustomRole, setIsCustomRole] = useState(false);
+  const [customRoleText, setCustomRoleText] = useState('');
   const [customCode, setCustomCode] = useState('');
   const [inviteNote, setInviteNote] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -44,6 +67,7 @@ export default function InvitesManager({ showToast }) {
 
   useEffect(() => {
     loadInvites();
+    loadMembers();
   }, []);
 
   async function loadInvites() {
@@ -58,6 +82,18 @@ export default function InvitesManager({ showToast }) {
       console.error('Error fetching invites:', err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadMembers() {
+    try {
+      const res = await fetch('/api/committees/members');
+      if (res.ok) {
+        const data = await res.json();
+        setAllMembers(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Error fetching members in InvitesManager:', err);
     }
   }
 
@@ -76,12 +112,74 @@ export default function InvitesManager({ showToast }) {
 
   const handleOpenCreateModal = () => {
     generateRandomCode();
+    setSelectedMemberId('');
+    setIsCustomInvitee(false);
+    setIsCustomRole(false);
+    setCustomRoleText('');
+    setInviteNote('');
+    setTargetRole('Committee Member');
     setIsModalOpen(true);
+  };
+
+  // When a member is chosen from the roster
+  const handleSelectMember = (memberId) => {
+    setSelectedMemberId(memberId);
+    if (!memberId) {
+      setInviteNote('');
+      return;
+    }
+    if (memberId === '__manual__') {
+      setIsCustomInvitee(true);
+      setInviteNote('');
+      return;
+    }
+    setIsCustomInvitee(false);
+    const mem = allMembers.find(m => (m.id === memberId || m.name === memberId));
+    if (mem) {
+      setInviteNote(mem.name);
+      // Auto-match committee if known
+      const memComm = mem.committee || mem.committeeName || mem.committeeKey;
+      if (memComm) {
+        const foundComm = ALL_COMMITTEES_LIST.find(c => 
+          c.name.toLowerCase() === memComm.toLowerCase() ||
+          c.key.toLowerCase() === memComm.toLowerCase() ||
+          c.id === memComm
+        );
+        if (foundComm) {
+          setTargetCommittee(foundComm.name);
+        }
+      }
+      // Auto-match role if known
+      if (mem.role) {
+        setTargetRole(mem.role);
+        setIsCustomRole(false);
+      }
+    }
+  };
+
+  // When a role is selected from the dropdown
+  const handleSelectRole = (val) => {
+    if (val === '__custom__') {
+      setIsCustomRole(true);
+      setCustomRoleText('');
+    } else {
+      setIsCustomRole(false);
+      setTargetRole(val);
+    }
   };
 
   const handleCreateInvite = async (e) => {
     e.preventDefault();
     setGenerating(true);
+
+    const finalRole = isCustomRole ? customRoleText.trim() : targetRole.trim();
+    const finalNote = isCustomInvitee ? inviteNote.trim() : inviteNote.trim();
+
+    if (!finalRole) {
+      if (showToast) showToast('Please select or specify a role', 'error');
+      setGenerating(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/invites', {
@@ -90,9 +188,9 @@ export default function InvitesManager({ showToast }) {
         body: JSON.stringify({
           code: customCode.trim(),
           targetCommittee,
-          targetRole,
+          targetRole: finalRole,
           generatedBy: user?.username || 'officer',
-          note: inviteNote
+          note: finalNote
         })
       });
 
@@ -102,6 +200,10 @@ export default function InvitesManager({ showToast }) {
         setIsModalOpen(false);
         setCustomCode('');
         setInviteNote('');
+        setSelectedMemberId('');
+        setIsCustomInvitee(false);
+        setIsCustomRole(false);
+        setCustomRoleText('');
         await loadInvites();
       } else {
         if (showToast) showToast(data.error || 'Failed to generate code', 'error');
@@ -494,11 +596,119 @@ export default function InvitesManager({ showToast }) {
             </p>
 
             <form onSubmit={handleCreateInvite} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* CHOOSE MEMBER FROM ROSTER */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>
+                    <span style={{ color: 'var(--primary)', fontWeight: '800' }}>* </span>
+                    {language === 'km' ? 'ជ្រើសរើសបេក្ខជនពីបញ្ជីឈ្មោះ (Member Roster)' : language === 'zh' ? '从成员名册中选择被邀请人' : 'Choose Invitee from Member Roster'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomInvitee(!isCustomInvitee);
+                      if (!isCustomInvitee) {
+                        setSelectedMemberId('__manual__');
+                        setInviteNote('');
+                      } else {
+                        setSelectedMemberId('');
+                        setInviteNote('');
+                      }
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    {isCustomInvitee 
+                      ? (language === 'km' ? '👥 ជ្រើសរើសពីបញ្ជីឈ្មោះ' : language === 'zh' ? '👥 从名册中选择' : '👥 Choose from Roster')
+                      : (language === 'km' ? '✏️ វាយឈ្មោះដោយផ្ទាល់' : language === 'zh' ? '✏️ 手动输入' : '✏️ Type Manually')}
+                  </button>
+                </div>
+
+                {!isCustomInvitee ? (
+                  <select
+                    value={selectedMemberId}
+                    onChange={(e) => handleSelectMember(e.target.value)}
+                    className="form-input"
+                  >
+                    <option value="">
+                      {language === 'km' ? '-- ជ្រើសរើសសមាជិកពីបញ្ជីឈ្មោះ (សូមជ្រើស) --' : language === 'zh' ? '-- 从花名册中选择成员（推荐） --' : '-- Choose Member from Roster (Recommended) --'}
+                    </option>
+                    {/* Members in selected committee */}
+                    {allMembers.filter(m => {
+                      const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
+                      const tName = targetCommittee.toLowerCase();
+                      return cName === tName || tName.includes(cName) || (cName && tName.includes(cName));
+                    }).length > 0 && (
+                      <optgroup label={language === 'km' ? `សមាជិកក្នុងគណៈកម្មការនេះ (${targetCommittee})` : language === 'zh' ? `本分委会成员 (${targetCommittee})` : `Members in Target Committee`}>
+                        {allMembers.filter(m => {
+                          const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
+                          const tName = targetCommittee.toLowerCase();
+                          return cName === tName || tName.includes(cName) || (cName && tName.includes(cName));
+                        }).map(m => (
+                          <option key={m.id || m.name} value={m.id || m.name}>
+                            👤 {m.name} ({m.role})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+
+                    {/* Members from other committees */}
+                    {allMembers.filter(m => {
+                      const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
+                      const tName = targetCommittee.toLowerCase();
+                      return !(cName === tName || tName.includes(cName) || (cName && tName.includes(cName)));
+                    }).length > 0 && (
+                      <optgroup label={language === 'km' ? 'សមាជិកពីគណៈកម្មការផ្សេង' : language === 'zh' ? '其他分委会成员' : 'Members from Other Committees'}>
+                        {allMembers.filter(m => {
+                          const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
+                          const tName = targetCommittee.toLowerCase();
+                          return !(cName === tName || tName.includes(cName) || (cName && tName.includes(cName)));
+                        }).map(m => (
+                          <option key={m.id || m.name} value={m.id || m.name}>
+                            👤 {m.name} — {getSubCommitteeLocalizedName(m.committee || m.committeeName, language) || (m.committee || m.committeeName)} ({m.role})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+
+                    <option value="__manual__">
+                      ✏️ {language === 'km' ? 'បេក្ខជនថ្មី (មិនទាន់មានក្នុងបញ្ជី)' : language === 'zh' ? '新候选人（不在名册中）' : 'New Invitee (Not in roster yet)...'}
+                    </option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Alex Morgan"
+                    value={inviteNote}
+                    onChange={(e) => setInviteNote(e.target.value)}
+                    className="form-input"
+                  />
+                )}
+
+                {inviteNote && !isCustomInvitee && (
+                  <div style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.1)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                    <span>👤 <strong>{inviteNote}</strong> {targetRole ? `• ${targetRole}` : ''}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* TARGET COMMITTEE SELECTION */}
               <div>
                 <label className="form-label">{language === 'km' ? 'គណៈកម្មការគោលដៅ' : language === 'zh' ? '目标分委员会' : 'Target Committee'}</label>
                 <select
                   value={targetCommittee}
-                  onChange={(e) => { setTargetCommittee(e.target.value); }}
+                  onChange={(e) => { 
+                    setTargetCommittee(e.target.value); 
+                    // Auto-regenerate code with new prefix
+                    const prefix = e.target.value.toLowerCase().includes('protocol') ? 'PROTO' :
+                                   e.target.value.toLowerCase().includes('finance') ? 'FIN' :
+                                   e.target.value.toLowerCase().includes('booth') || e.target.value.toLowerCase().includes('design') ? 'BOOTH' :
+                                   e.target.value.toLowerCase().includes('central') ? 'CENTRAL' : 'EXP';
+                    const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                    let rand = '';
+                    for (let i = 0; i < 5; i++) rand += letters.charAt(Math.floor(Math.random() * letters.length));
+                    setCustomCode(`EXP-${prefix}-${rand}`);
+                  }}
                   className="form-input"
                 >
                   {ALL_COMMITTEES_LIST.map(c => (
@@ -509,18 +719,58 @@ export default function InvitesManager({ showToast }) {
                 </select>
               </div>
 
+              {/* CHOOSE DESIGNATED ROLE */}
               <div>
-                <label className="form-label">{language === 'km' ? 'តួនាទី / មុខតំណែង' : language === 'zh' ? '拟委派职位' : 'Designated Role / Position'}</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Protocol Officer, Vice Chair, Specialist..."
-                  value={targetRole}
-                  onChange={(e) => setTargetRole(e.target.value)}
-                  className="form-input"
-                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>
+                    {language === 'km' ? 'តួនាទី / មុខតំណែង' : language === 'zh' ? '拟委派职位' : 'Designated Role / Position'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomRole(!isCustomRole);
+                      if (!isCustomRole) setCustomRoleText('');
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    {isCustomRole 
+                      ? (language === 'km' ? '📋 ជ្រើសរើសពីតួនាទីស្តង់ដារ' : language === 'zh' ? '📋 选择标准职务' : '📋 Choose from Standard Roles')
+                      : (language === 'km' ? '✏️ វាយតួនាទីដោយផ្ទាល់' : language === 'zh' ? '✏️ 手动输入' : '✏️ Custom Role')}
+                  </button>
+                </div>
+
+                {!isCustomRole ? (
+                  <select
+                    value={targetRole}
+                    onChange={(e) => handleSelectRole(e.target.value)}
+                    className="form-input"
+                  >
+                    {/* If selected member has a role not in standard list, show it */}
+                    {targetRole && !OFFICIAL_ROLE_OPTIONS.some(o => o.value === targetRole) && (
+                      <option value={targetRole}>⭐ {targetRole} ({language === 'km' ? 'តួនាទីបច្ចុប្បន្ន' : language === 'zh' ? '当前名册职务' : 'Current Roster Role'})</option>
+                    )}
+                    {OFFICIAL_ROLE_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {language === 'km' ? opt.km : language === 'zh' ? `${opt.zh} (${opt.value})` : opt.value}
+                      </option>
+                    ))}
+                    <option value="__custom__">
+                      ✏️ {language === 'km' ? 'តួនាទីផ្សេងទៀត (វាយបញ្ចូលដោយផ្ទាល់)...' : language === 'zh' ? '其他职位（手动输入）...' : 'Other Role (Type manually)...'}
+                    </option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Protocol Specialist, Stage Manager..."
+                    value={customRoleText}
+                    onChange={(e) => setCustomRoleText(e.target.value)}
+                    className="form-input"
+                  />
+                )}
               </div>
 
+              {/* VERIFICATION CODE */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label className="form-label" style={{ marginBottom: 0 }}>{language === 'km' ? 'កូដផ្ទៀងផ្ទាត់' : language === 'zh' ? '专属验证码' : 'Verification Code'}</label>
@@ -539,17 +789,6 @@ export default function InvitesManager({ showToast }) {
                   onChange={(e) => setCustomCode(e.target.value.toUpperCase())}
                   className="form-input"
                   style={{ letterSpacing: '0.08em', fontWeight: '800', fontFamily: 'var(--font-mono)' }}
-                />
-              </div>
-
-              <div>
-                <label className="form-label">{language === 'km' ? 'កំណត់សម្គាល់ / ឈ្មោះអ្នកទទួល' : language === 'zh' ? '邀请备注 / 受邀人姓名' : 'Note / Invitee Name'}</label>
-                <input
-                  type="text"
-                  placeholder="e.g. For VIP protocol team addition"
-                  value={inviteNote}
-                  onChange={(e) => setInviteNote(e.target.value)}
-                  className="form-input"
                 />
               </div>
 
