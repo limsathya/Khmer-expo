@@ -129,7 +129,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#060911] text-slate-100 overflow-hidden">
       {/* 1. HERO SECTION */}
-      <section className="relative pt-12 pb-24 lg:pt-20 lg:pb-32 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+      <section className="relative pt-8 pb-16 sm:pt-14 sm:pb-24 lg:pt-20 lg:pb-32 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
         {/* Ambient Bilateral Glow Background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
@@ -195,7 +195,7 @@ export default function HomePage() {
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
               {language === 'km' ? 'រាប់ថយក្រោយដល់ពិធីបើកសម្ពោធ' : language === 'zh' ? '距博览会盛大开幕倒计时' : 'Official Countdown to Opening Ceremony'}
             </div>
-            <div className="grid grid-cols-4 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
               {[
                 { label: 'DAYS', val: timeLeft.days },
                 { label: 'HOURS', val: timeLeft.hours },
@@ -203,7 +203,7 @@ export default function HomePage() {
                 { label: 'SECONDS', val: timeLeft.seconds },
               ].map((item, idx) => (
                 <div key={idx} className="bg-[#060911]/90 rounded-xl p-3 border border-slate-800">
-                  <div className="text-2xl sm:text-4xl font-black text-amber-400 font-mono">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-400 font-mono">
                     {String(item.val).padStart(2, '0')}
                   </div>
                   <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">

@@ -200,7 +200,7 @@ export default function BoothsManager({ showToast }) {
       </div>
 
       {/* Main Layout: Visual Floor Plan + Side Inspector */}
-      <div style={{ display: 'grid', gridTemplateColumns: selectedBooth ? '1fr 340px' : '1fr', gap: '20px', alignItems: 'start' }}>
+      <div className={`grid gap-5 items-start ${selectedBooth ? 'grid-cols-1 xl:grid-cols-[1fr_340px]' : 'grid-cols-1'}`}>
         {/* Visual Map Canvas */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {Object.entries(zoneGroups)

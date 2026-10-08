@@ -128,7 +128,7 @@ export default function ProgramPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
             {CATEGORIES.slice(0, 6).map((cat) => (
               <button
                 key={cat}
@@ -181,7 +181,7 @@ export default function ProgramPage() {
             {filteredPrograms.map((p) => (
               <div key={p.id} className="relative group">
                 {/* Timeline Pip */}
-                <div className="absolute -left-[31px] sm:-left-[47px] top-1.5 w-4 h-4 rounded-full bg-blue-600 ring-4 ring-[#060911] group-hover:scale-125 transition-transform" />
+                <div className="absolute -left-[33px] sm:-left-[49px] top-1.5 w-4 h-4 rounded-full bg-blue-600 ring-4 ring-[#060911] group-hover:scale-125 transition-transform" />
 
                 <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs mb-3">

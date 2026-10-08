@@ -1184,6 +1184,7 @@ html, body {
   align-items: flex-start;
   position: relative;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .admin-sidebar {
@@ -1211,6 +1212,12 @@ html, body {
 .admin-sidebar.collapsed {
   width: 76px;
   padding: 16px 8px;
+}
+
+.admin-sidebar.collapsed .admin-sidebar-btn {
+  justify-content: center;
+  padding: 10px 0;
+  gap: 0;
 }
 
 .admin-sidebar-group-title {
@@ -1281,6 +1288,10 @@ html, body {
 
 /* Tablet & Mobile Breakpoints */
 @media (max-width: 1024px) {
+  .desktop-only-btn {
+    display: none !important;
+  }
+
   .admin-layout-wrapper {
     padding: 16px 12px;
     display: block;
