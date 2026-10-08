@@ -2014,13 +2014,43 @@ export default function AdminDashboardPage() {
                 </div>
                 <div>
                   <label className="form-label">{t('submit.fieldBooth', 'Booth Number')}</label>
-                  <input
-                    type="text"
-                    value={eventFormData.boothNumber}
-                    onChange={(e) => setEventFormData({ ...eventFormData, boothNumber: e.target.value })}
-                    className="form-input"
-                    placeholder="A-12"
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <select
+                      value={eventFormData.boothNumber.startsWith('B-') ? eventFormData.boothNumber : ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          setEventFormData(prev => ({
+                            ...prev,
+                            boothNumber: val
+                          }));
+                        }
+                      }}
+                      className="form-select"
+                      style={{ fontSize: '0.85rem' }}
+                    >
+                      <option value="">{language === 'zh' ? '-- 75个标准展位快捷选择 (2m×2m) --' : '-- Select Booth (#01–#75, 2m×2m) --'}</option>
+                      <optgroup label={language === 'zh' ? '主展区环廊 (#01 ~ #65)' : 'Main Plaza (#01 – #65)'}>
+                        {Array.from({ length: 65 }, (_, i) => {
+                          const num = (i + 1).toString().padStart(2, '0');
+                          return <option key={`B-${num}`} value={`B-${num}`}>Booth #{i + 1} (B-{num}) — 2m×2m</option>;
+                        })}
+                      </optgroup>
+                      <optgroup label={language === 'zh' ? '悦汇坊通道 (#66 ~ #75)' : 'Yuehui Fang (#66 – #75)'}>
+                        {Array.from({ length: 10 }, (_, i) => {
+                          const num = (i + 66).toString().padStart(2, '0');
+                          return <option key={`B-${num}`} value={`B-${num}`}>Booth #{i + 66} (B-{num}) — 悦汇坊</option>;
+                        })}
+                      </optgroup>
+                    </select>
+                    <input
+                      type="text"
+                      value={eventFormData.boothNumber}
+                      onChange={(e) => setEventFormData({ ...eventFormData, boothNumber: e.target.value })}
+                      className="form-input"
+                      placeholder="e.g. B-01"
+                    />
+                  </div>
                 </div>
               </div>
 

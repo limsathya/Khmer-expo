@@ -19,7 +19,11 @@ import {
   ShieldCheck,
   Sparkles,
   Lock,
-  LogIn
+  LogIn,
+  LayoutTemplate,
+  Maximize2,
+  X,
+  Download
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { useLanguage } from '@/components/LanguageProvider';
@@ -39,6 +43,7 @@ export default function SubmitProposalPage() {
   const [adminAuthError, setAdminAuthError] = useState('');
   const [adminAuthLoading, setAdminAuthLoading] = useState(false);
   const [subCommittees, setSubCommittees] = useState(SUB_COMMITTEES);
+  const [isFloorPlanModalOpen, setIsFloorPlanModalOpen] = useState(false);
 
   const formatTimeString = (time, endTime) => {
     if (!time) return '';
@@ -576,15 +581,72 @@ export default function SubmitProposalPage() {
             </div>
 
             <div>
-              <label className="form-label">{t('submit.fieldBooth')}</label>
-              <input
-                type="text"
-                name="boothNumber"
-                placeholder={t('submit.fieldBoothPlaceholder')}
-                value={formData.boothNumber}
-                onChange={handleChange}
-                className="form-input"
-              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="form-label" style={{ margin: 0 }}>{t('submit.fieldBooth')}</label>
+                <button
+                  type="button"
+                  onClick={() => setIsFloorPlanModalOpen(true)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.72rem', padding: '2px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <LayoutTemplate size={12} color="var(--primary)" />
+                  <span>{language === 'km' ? 'មើលប្លង់ ៧៥ ស្តង់' : language === 'zh' ? '查看75展位平面图' : 'View Floor Plan'}</span>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <select
+                  value={formData.boothNumber.startsWith('B-') ? formData.boothNumber : ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val) {
+                      const num = parseInt(val.replace('B-', ''), 10);
+                      const isYuehui = num >= 66 && num <= 75;
+                      setFormData(prev => ({
+                        ...prev,
+                        boothNumber: val,
+                        location: (!prev.location || prev.location.includes('Hall') || prev.location.includes('Plaza') || prev.location.includes('昆明广场') || prev.location.includes('ទីលាន'))
+                          ? (isYuehui 
+                              ? (language === 'zh' ? '同德昆明广场·悦汇坊 (Booth ' + val + ')' : language === 'km' ? 'ទីលានថុងទ័រ · Yuehui Fang (ស្តង់ ' + val + ')' : 'Tongde Plaza · Yuehui Fang (Booth ' + val + ')')
+                              : (language === 'zh' ? '同德昆明广场·主展区环廊 (Booth ' + val + ')' : language === 'km' ? 'ទីលានថុងទ័រ · សាលធំ Main Plaza (ស្តង់ ' + val + ')' : 'Tongde Plaza · Main Corridor (Booth ' + val + ')'))
+                          : prev.location
+                      }));
+                    }
+                  }}
+                  className="form-select"
+                >
+                  <option value="">{language === 'km' ? '-- ជ្រើសរើសស្តង់ពីប្លង់ (1-75, 2m×2m) --' : language === 'zh' ? '-- 从平面布置图选择展位 (#01~#75, 2m×2m) --' : '-- Select Booth from Layout (#01–#75, 2m×2m) --'}</option>
+                  <optgroup label={language === 'zh' ? '主展区环廊 (#01 ~ #65, 标准 2m×2m)' : 'Main Plaza Corridor (#01 – #65, 2m×2m)'}>
+                    {Array.from({ length: 65 }, (_, i) => {
+                      const num = (i + 1).toString().padStart(2, '0');
+                      return (
+                        <option key={`B-${num}`} value={`B-${num}`}>
+                          Booth #{i + 1} (B-{num}) — 2m × 2m (4m²)
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                  <optgroup label={language === 'zh' ? '悦汇坊通道展区 (#66 ~ #75, 2m×2m)' : 'Yuehui Fang Promenade (#66 – #75, 2m×2m)'}>
+                    {Array.from({ length: 10 }, (_, i) => {
+                      const num = (i + 66).toString().padStart(2, '0');
+                      return (
+                        <option key={`B-${num}`} value={`B-${num}`}>
+                          Booth #{i + 66} (B-{num}) — 2m × 2m (悦汇坊)
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                </select>
+
+                <input
+                  type="text"
+                  name="boothNumber"
+                  placeholder={t('submit.fieldBoothPlaceholder')}
+                  value={formData.boothNumber}
+                  onChange={handleChange}
+                  className="form-input"
+                />
+              </div>
             </div>
           </div>
 
@@ -645,6 +707,104 @@ export default function SubmitProposalPage() {
           </div>
         </form>
       </div>
+
+      {/* Floor Plan Blueprint Modal */}
+      {isFloorPlanModalOpen && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setIsFloorPlanModalOpen(false)}
+          style={{ zIndex: 1100, padding: '20px' }}
+        >
+          <div
+            className="modal-card"
+            style={{
+              maxWidth: '1100px',
+              width: '95vw',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '24px',
+              position: 'relative'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🗺️</span>
+                  <span>{language === 'km' ? 'ប្លង់ស្ថាបត្យកម្មស្តង់ទាំង ៧៥ (同德昆明广场)' : language === 'zh' ? '同德昆明广场展位平面布置图 (75个展位)' : 'Tongde Kunming Plaza Floor Plan (75 Booths)'}</span>
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                  {language === 'zh'
+                    ? '75个标准展位 (2m×2m) · 主舞台 14m×7m · 控台 2m×3m · 悦汇坊通道 #66–#75'
+                    : '75 Booths (2m×2m) · Main Stage 14m×7m · AV Console 2m×3m · Yuehui Fang #66–#75'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <a
+                  href="/floor-plan.jpg"
+                  download="Tongde-Kunming-Plaza-Floor-Plan.jpg"
+                  className="btn btn-secondary btn-sm"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Download size={14} />
+                  <span>{language === 'zh' ? '下载布置图' : 'Download'}</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setIsFloorPlanModalOpen(false)}
+                  className="btn btn-secondary btn-sm"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick architectural spec pills */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              flexWrap: 'wrap',
+              marginBottom: '14px',
+              fontSize: '0.78rem'
+            }}>
+              <span style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: '3px 10px', borderRadius: '6px', fontWeight: '700' }}>
+                🎪 75 Booths (2m × 2m)
+              </span>
+              <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '3px 10px', borderRadius: '6px', fontWeight: '700' }}>
+                🎭 Stage (14m × 7m)
+              </span>
+              <span style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa', padding: '3px 10px', borderRadius: '6px', fontWeight: '700' }}>
+                🎛️ AV Console (2m × 3m)
+              </span>
+              <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', padding: '3px 10px', borderRadius: '6px', fontWeight: '700' }}>
+                🛍️ Yuehui Fang (#66–#75)
+              </span>
+              <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', padding: '3px 10px', borderRadius: '6px', fontWeight: '700' }}>
+                ⚠️ 3 Stores Hoarding (Corridor 2m)
+              </span>
+            </div>
+
+            {/* Image viewport */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              textAlign: 'center',
+              background: '#090d16',
+              borderRadius: '12px',
+              padding: '12px',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <img
+                src="/floor-plan.jpg"
+                alt="Tongde Kunming Plaza Floor Plan"
+                style={{ maxWidth: '100%', height: 'auto', borderRadius: '6px', display: 'inline-block' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

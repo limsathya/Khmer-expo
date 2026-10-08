@@ -14,15 +14,42 @@ import {
   ArrowUp,
   ArrowDown,
   Building,
-  Info
+  Info,
+  Maximize2,
+  Eye,
+  Grid,
+  LayoutTemplate,
+  AlertTriangle,
+  X,
+  Download
 } from 'lucide-react';
 import { useSettings } from '@/components/SettingsProvider';
 import { useLanguage } from '@/components/LanguageProvider';
 import { DEFAULT_ZONES } from '@/lib/expo-config';
 
+// Official 75 booths matching Tongde Kunming Plaza layout
+const ALL_75_BOOTHS = Array.from({ length: 75 }, (_, i) => {
+  const num = i + 1;
+  const isYuehui = num >= 66 && num <= 75;
+  return {
+    number: num,
+    code: `B-${num.toString().padStart(2, '0')}`,
+    zoneKey: isYuehui ? 'yuehui' : 'main',
+    zoneName: isYuehui ? 'Yuehui Fang (悦汇坊)' : 'Main Plaza Walkway (主广场环廊)',
+    zoneNameKm: isYuehui ? 'តំបន់ Yuehui Fang' : 'ផ្លូវដើរសាលធំ Main Plaza',
+    dimensions: '2m × 2m',
+    areaM2: '4 m²'
+  };
+});
+
 export default function ZonesManager({ showToast }) {
   const { expoConfig, updateSettings, getZones } = useSettings();
   const { t, language } = useLanguage();
+
+  const [activeTab, setActiveTab] = useState('floorplan'); // 'floorplan' | 'zones'
+  const [boothFilter, setBoothFilter] = useState('all'); // 'all' | 'main' | 'yuehui'
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [selectedBooth, setSelectedBooth] = useState(null);
 
   const [zones, setZones] = useState(
     Array.isArray(expoConfig.zones) && expoConfig.zones.length > 0
@@ -178,40 +205,492 @@ export default function ZonesManager({ showToast }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={handleResetDefaults}
-            className="btn btn-secondary btn-sm"
-            title="Reset to default expo zones"
-          >
-            <RotateCcw size={14} />
-            <span>{language === 'km' ? 'កំណត់លំនាំដើម' : language === 'zh' ? '恢复默认' : 'Reset Defaults'}</span>
-          </button>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {activeTab === 'floorplan' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setIsLightboxOpen(true)}
+                className="btn btn-secondary btn-sm"
+              >
+                <Maximize2 size={14} />
+                <span>{language === 'km' ? 'ពង្រីកប្លង់ស្ថាបត្យកម្ម' : language === 'zh' ? '全屏查看布置图' : 'Enlarge Blueprint'}</span>
+              </button>
+              <a
+                href="/floor-plan.jpg"
+                download="Tongde-Kunming-Plaza-Floor-Plan.jpg"
+                className="btn btn-secondary btn-sm"
+                style={{ textDecoration: 'none' }}
+              >
+                <Download size={14} />
+                <span>{language === 'km' ? 'ទាញយកប្លង់' : language === 'zh' ? '下载布置图' : 'Download Plan'}</span>
+              </a>
+            </>
+          )}
 
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="btn btn-secondary btn-sm"
-          >
-            <Plus size={15} />
-            <span>{language === 'km' ? '+ បន្ថែមសាល/តំបន់ថ្មី' : language === 'zh' ? '+ 添加新展区/展厅' : '+ Add Zone/Hall'}</span>
-          </button>
+          {activeTab === 'zones' && (
+            <>
+              <button
+                type="button"
+                onClick={handleResetDefaults}
+                className="btn btn-secondary btn-sm"
+                title="Reset to default expo zones"
+              >
+                <RotateCcw size={14} />
+                <span>{language === 'km' ? 'កំណត់លំនាំដើម' : language === 'zh' ? '恢复默认' : 'Reset Defaults'}</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={handleSaveToDB}
-            disabled={saving}
-            className="btn btn-primary btn-sm"
-            style={{ fontWeight: '700' }}
-          >
-            <Check size={16} />
-            <span>{saving ? 'Saving...' : (language === 'km' ? 'រក្សាទុកទីតាំងទាំងអស់ទៅ DB' : language === 'zh' ? '保存全部区域至数据库' : 'Save Zones to DB')}</span>
-          </button>
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="btn btn-secondary btn-sm"
+              >
+                <Plus size={15} />
+                <span>{language === 'km' ? '+ បន្ថែមសាល/តំបន់ថ្មី' : language === 'zh' ? '+ 添加新展区/展厅' : '+ Add Zone/Hall'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveToDB}
+                disabled={saving}
+                className="btn btn-primary btn-sm"
+                style={{ fontWeight: '700' }}
+              >
+                <Check size={16} />
+                <span>{saving ? 'Saving...' : (language === 'km' ? 'រក្សាទុកទីតាំងទាំងអស់ទៅ DB' : language === 'zh' ? '保存全部区域至数据库' : 'Save Zones to DB')}</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Info Notice Banner */}
+      {/* Main Tab Switcher */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        padding: '6px',
+        background: 'var(--bg-card)',
+        borderRadius: '12px',
+        border: '1px solid var(--border-subtle)',
+        marginBottom: '24px',
+        width: 'fit-content',
+        flexWrap: 'wrap'
+      }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('floorplan')}
+          className="btn"
+          style={{
+            background: activeTab === 'floorplan' ? 'var(--primary)' : 'transparent',
+            color: activeTab === 'floorplan' ? '#fff' : 'var(--text-secondary)',
+            fontWeight: '700',
+            fontSize: '0.9rem',
+            padding: '8px 18px',
+            borderRadius: '8px',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <LayoutTemplate size={16} />
+          <span>{language === 'km' ? '🗺️ ប្លង់ស្ថាបត្យកម្ម & ៧៥ ស្តង់' : language === 'zh' ? '🗺️ 昆明广场平面布置图与75个展位' : '🗺️ Floor Plan & 75 Booths'}</span>
+          <span style={{
+            fontSize: '0.75rem',
+            background: activeTab === 'floorplan' ? 'rgba(255,255,255,0.25)' : 'var(--bg-main)',
+            color: activeTab === 'floorplan' ? '#fff' : 'var(--text-muted)',
+            padding: '2px 8px',
+            borderRadius: '999px',
+            fontWeight: '800'
+          }}>
+            75
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('zones')}
+          className="btn"
+          style={{
+            background: activeTab === 'zones' ? 'var(--primary)' : 'transparent',
+            color: activeTab === 'zones' ? '#fff' : 'var(--text-secondary)',
+            fontWeight: '700',
+            fontSize: '0.9rem',
+            padding: '8px 18px',
+            borderRadius: '8px',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Layers size={16} />
+          <span>{language === 'km' ? '⚙️ កំណត់ទីតាំង & សាលពិព័រណ៍' : language === 'zh' ? '⚙️ 自定义展区与展厅' : '⚙️ Configured Zones & Halls'}</span>
+          <span style={{
+            fontSize: '0.75rem',
+            background: activeTab === 'zones' ? 'rgba(255,255,255,0.25)' : 'var(--bg-main)',
+            color: activeTab === 'zones' ? '#fff' : 'var(--text-muted)',
+            padding: '2px 8px',
+            borderRadius: '999px',
+            fontWeight: '800'
+          }}>
+            {zones.length}
+          </span>
+        </button>
+      </div>
+
+      {/* FLOOR PLAN & 75 BOOTHS BLUEPRINT VIEW */}
+      {activeTab === 'floorplan' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Architectural Specs Header Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+            <div className="glass-card" style={{ padding: '16px', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>
+                {language === 'km' ? 'ទីតាំងរៀបចំពិព័រណ៍' : language === 'zh' ? '举办场地 / 地点' : 'Venue'}
+              </div>
+              <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '4px' }}>
+                {language === 'km' ? 'ទីលានថុងទ័រគុនមីង' : language === 'zh' ? '同德昆明广场' : 'Tongde Kunming Plaza'}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '2px' }}>
+                Kunming Plaza · 云南昆明
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '16px', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>
+                {language === 'km' ? 'ចំនួនស្តង់សរុប' : language === 'zh' ? '展位总数' : 'Total Standard Booths'}
+              </div>
+              <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#10b981', marginTop: '4px' }}>
+                75 {language === 'km' ? 'ស្តង់' : language === 'zh' ? '个展位' : 'Booths'}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                2m × 2m (4 m² {language === 'km' ? 'ក្នុងមួយស្តង់' : language === 'zh' ? '/标准展位' : 'each'})
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '16px', borderRadius: '12px', borderLeft: '4px solid #8b5cf6' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>
+                {language === 'km' ? 'ឆាកធំ & 控台' : language === 'zh' ? '主舞台与控台规格' : 'Main Stage & AV Console'}
+              </div>
+              <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '4px' }}>
+                {language === 'zh' ? '舞台 14m × 7m' : 'Stage 14m × 7m'}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                {language === 'zh' ? '控台 2m × 3m' : 'AV Console 2m × 3m'}
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '16px', borderRadius: '12px', borderLeft: '4px solid #f59e0b' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>
+                {language === 'km' ? 'ការបែងចែកតំបន់' : language === 'zh' ? '展位分区构成' : 'Zone Layout Distribution'}
+              </div>
+              <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '4px' }}>
+                #01–#65 {language === 'zh' ? '主展区环廊' : 'Main Plaza'}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '2px' }}>
+                #66–#75 {language === 'zh' ? '悦汇坊 (10个)' : 'Yuehui Fang (10 booths)'}
+              </div>
+            </div>
+          </div>
+
+          {/* Notice Banner from Architectural Plan */}
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.08)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            borderRadius: '12px',
+            padding: '12px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '0.85rem',
+            color: 'var(--text-main)'
+          }}>
+            <AlertTriangle size={18} color="#f59e0b" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <strong style={{ color: '#f59e0b' }}>{language === 'km' ? 'សេចក្តីជូនដំណឹងអំពីការដ្ឋាន:' : language === 'zh' ? '现场工程提示:' : 'Site Renovation Note:'}</strong>{' '}
+              {language === 'km'
+                ? 'ហាងមាសចំនួន ៣ កំពុងជួសជុលរៀបចំឡើងវិញ ផ្លូវដើរឆ្លងកាត់ដែលនៅសល់មានទំហំ ២ ម៉ែត្រ។ សូមរៀបចំលំហូរមនុស្សឱ្យបានសមស្រប។'
+                : language === 'zh'
+                ? '3家金铺打围重装，通道剩余2米。请做好人流引导与安全通畅保障。'
+                : '3 jewelry stores are under hoardings for renovation; corridor passage remaining width is 2.0 meters. Maintain crowd flow.'}
+            </div>
+          </div>
+
+          {/* Floor Plan Blueprint Viewer Card */}
+          <div className="glass-card" style={{ padding: '24px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🗺️</span>
+                  <span>{language === 'km' ? 'ប្លង់ស្ថាបត្យកម្មផ្លូវការ (同德昆明广场展位平面布置图)' : language === 'zh' ? '同德昆明广场展位平面布置图' : 'Official Architectural Blueprint (Tongde Kunming Plaza)'}</span>
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                  {language === 'km'
+                    ? 'ចុចលើរូបភាពដើម្បីពង្រីកមើលព័ត៌មានលម្អិតនៃស្តង់ទាំង ៧៥ ឆាកធំ និងកន្លែងបញ្ជា'
+                    : language === 'zh'
+                    ? '清晰标注1~75号展位定位、14m×7m主舞台、2m×3m控台及现场通道尺寸。点击可全屏高清放大查看。'
+                    : 'Detailed layout of Booths #1–#75, 14m×7m stage, 2m×3m AV console, and aisles. Click to inspect.'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsLightboxOpen(true)}
+                  className="btn btn-secondary btn-sm"
+                >
+                  <Maximize2 size={14} />
+                  <span>{language === 'km' ? 'ពង្រីកពេញអេក្រង់' : language === 'zh' ? '全屏高清' : 'Fullscreen'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Blueprint Image Container */}
+            <div
+              onClick={() => setIsLightboxOpen(true)}
+              style={{
+                position: 'relative',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '1px solid var(--border-subtle)',
+                background: '#090d16',
+                cursor: 'pointer',
+                maxHeight: '480px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Click to view full architectural blueprint"
+            >
+              <img
+                src="/floor-plan.jpg"
+                alt="Tongde Kunming Plaza Floor Plan Layout"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  maxHeight: '480px',
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                bottom: '12px',
+                right: '12px',
+                background: 'rgba(0,0,0,0.75)',
+                backdropFilter: 'blur(8px)',
+                color: '#fff',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontSize: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1px solid rgba(255,255,255,0.15)'
+              }}>
+                <Eye size={13} />
+                <span>{language === 'km' ? 'ចុចដើម្បីពង្រីក' : language === 'zh' ? '点击全屏高清缩放' : 'Click to inspect full blueprint'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive 75 Booths Matrix */}
+          <div className="glass-card" style={{ padding: '24px', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Grid size={18} color="var(--primary)" />
+                  <span>{language === 'km' ? 'បញ្ជីស្តង់ទាំង ៧៥ (2m × 2m)' : language === 'zh' ? '75个展位详细花名册 (2m × 2m)' : '75 Booths Directory & Allocations (2m × 2m)'}</span>
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                  {language === 'km'
+                    ? 'ស្តង់ទាំងអស់មានទំហំស្តង់ដារ 2m × 2m (៤ ម៉ែត្រការ៉េ)'
+                    : language === 'zh'
+                    ? '全部展位规格为统一标准 2m × 2m（4 平方米）。点击任意展位查看详情。'
+                    : 'All standard booths are 2m × 2m (4 m²). Select any booth to inspect specifications.'}
+                </p>
+              </div>
+
+              {/* Filter Tabs */}
+              <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-main)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+                <button
+                  type="button"
+                  onClick={() => setBoothFilter('all')}
+                  className="btn btn-sm"
+                  style={{
+                    background: boothFilter === 'all' ? 'var(--primary)' : 'transparent',
+                    color: boothFilter === 'all' ? '#fff' : 'var(--text-secondary)',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {language === 'zh' ? '全部 (75)' : 'All (75)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoothFilter('main')}
+                  className="btn btn-sm"
+                  style={{
+                    background: boothFilter === 'main' ? 'var(--primary)' : 'transparent',
+                    color: boothFilter === 'main' ? '#fff' : 'var(--text-secondary)',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {language === 'zh' ? '主展区 #1~#65 (65)' : 'Main Plaza #1-#65 (65)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoothFilter('yuehui')}
+                  className="btn btn-sm"
+                  style={{
+                    background: boothFilter === 'yuehui' ? '#f59e0b' : 'transparent',
+                    color: boothFilter === 'yuehui' ? '#fff' : 'var(--text-secondary)',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {language === 'zh' ? '悦汇坊 #66~#75 (10)' : 'Yuehui Fang #66-#75 (10)'}
+                </button>
+              </div>
+            </div>
+
+            {/* Selected Booth Detail Banner (if any) */}
+            {selectedBooth && (
+              <div style={{
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid var(--primary)',
+                borderRadius: '12px',
+                padding: '14px 18px',
+                marginBottom: '18px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      background: 'var(--primary)',
+                      color: '#fff',
+                      fontWeight: '900',
+                      padding: '3px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      fontFamily: 'var(--font-mono)'
+                    }}>
+                      Booth #{selectedBooth.number} ({selectedBooth.code})
+                    </span>
+                    <strong style={{ color: 'var(--text-main)', fontSize: '0.95rem' }}>
+                      {language === 'km' ? selectedBooth.zoneNameKm : selectedBooth.zoneName}
+                    </strong>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                    {language === 'zh'
+                      ? `标准展位尺寸：${selectedBooth.dimensions} | 使用面积：${selectedBooth.areaM2} | 地点：同德昆明广场`
+                      : `Dimensions: ${selectedBooth.dimensions} | Usable Area: ${selectedBooth.areaM2} | Venue: Tongde Kunming Plaza`}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedBooth(null)}
+                  className="btn btn-secondary btn-sm"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Booths Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))',
+              gap: '8px'
+            }}>
+              {ALL_75_BOOTHS
+                .filter(b => boothFilter === 'all' || b.zoneKey === boothFilter)
+                .map(b => {
+                  const isSelected = selectedBooth?.number === b.number;
+                  const isYuehui = b.zoneKey === 'yuehui';
+                  return (
+                    <button
+                      key={b.number}
+                      type="button"
+                      onClick={() => setSelectedBooth(isSelected ? null : b)}
+                      style={{
+                        padding: '10px 4px',
+                        borderRadius: '10px',
+                        border: isSelected
+                          ? '2px solid var(--primary)'
+                          : isYuehui
+                          ? '1px solid rgba(245, 158, 11, 0.4)'
+                          : '1px solid var(--border-subtle)',
+                        background: isSelected
+                          ? 'rgba(99, 102, 241, 0.25)'
+                          : isYuehui
+                          ? 'rgba(245, 158, 11, 0.08)'
+                          : 'var(--bg-card)',
+                        color: 'var(--text-main)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '3px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '800',
+                        fontFamily: 'var(--font-mono)',
+                        color: isYuehui ? '#f59e0b' : 'var(--text-main)'
+                      }}>
+                        #{b.number}
+                      </span>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', letterSpacing: '-0.3px' }}>
+                        2×2m
+                      </span>
+                      {isYuehui && (
+                        <span style={{
+                          fontSize: '0.55rem',
+                          background: '#f59e0b',
+                          color: '#000',
+                          fontWeight: '800',
+                          padding: '1px 3px',
+                          borderRadius: '3px',
+                          lineHeight: 1
+                        }}>
+                          悦汇
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIGURED ZONES & HALLS VIEW */}
+      {activeTab === 'zones' && (
+        <>
+          {/* Info Notice Banner */}
       <div style={{
         background: 'rgba(99, 102, 241, 0.08)',
         border: '1px solid rgba(99, 102, 241, 0.25)',
@@ -385,6 +864,8 @@ export default function ZonesManager({ showToast }) {
           );
         })}
       </div>
+    </>
+  )}
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
@@ -575,6 +1056,67 @@ export default function ZonesManager({ showToast }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal for Fullscreen Blueprint */}
+      {isLightboxOpen && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setIsLightboxOpen(false)}
+          style={{ zIndex: 1100, padding: '20px' }}
+        >
+          <div
+            className="modal-card"
+            style={{
+              maxWidth: '1200px',
+              width: '95vw',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '20px',
+              position: 'relative'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🗺️</span>
+                  <span>同德昆明广场展位平面布置图 (Tongde Kunming Plaza Layout)</span>
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                  75 Standard Booths (2m × 2m) · Main Stage 14m × 7m · AV Console 2m × 3m · Yuehui Fang #66–#75
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <a
+                  href="/floor-plan.jpg"
+                  download="Tongde-Kunming-Plaza-Floor-Plan.jpg"
+                  className="btn btn-secondary btn-sm"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Download size={14} />
+                  <span>Download</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setIsLightboxOpen(false)}
+                  className="btn btn-secondary btn-sm"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div style={{ flex: 1, overflow: 'auto', textAlign: 'center', background: '#090d16', borderRadius: '10px', padding: '10px' }}>
+              <img
+                src="/floor-plan.jpg"
+                alt="Tongde Kunming Plaza Full Architectural Blueprint"
+                style={{ maxWidth: '100%', height: 'auto', borderRadius: '6px', display: 'inline-block' }}
+              />
+            </div>
           </div>
         </div>
       )}
