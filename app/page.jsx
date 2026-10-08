@@ -74,7 +74,7 @@ export default function HomePage() {
   useEffect(() => {
     async function loadAllHomeData() {
       try {
-        const [statsRes, progRes, exhibRes, speakRes, sponsRes, newsRes] = await Promise.all([
+        const [statsRes, progRes, exhibRes, speakRes, sponsorsRes, newsRes] = await Promise.all([
           fetch('/api/stats').catch(() => null),
           fetch('/api/programs').catch(() => null),
           fetch('/api/exhibitors').catch(() => null),
