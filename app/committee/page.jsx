@@ -95,11 +95,11 @@ export default function CommitteePage() {
     let totalCoPresidents = 0;
 
     allCommittees.forEach(c => {
-      const memCount = c.memberCount ?? (c.members?.length || 0);
-      const leadCount = c.lead ? 1 : 0;
-      totalPersonnel += memCount + leadCount;
+      const memCount = Array.isArray(c.members) ? c.members.length : 0;
+      const hasLead = Boolean(c.lead && c.lead.name && c.lead.name !== 'To Be Appointed');
+      totalPersonnel += memCount + (hasLead ? 1 : 0);
 
-      if (c.lead) totalPresidents++;
+      if (hasLead) totalPresidents++;
 
       if (Array.isArray(c.members)) {
         c.members.forEach(m => {
@@ -444,14 +444,15 @@ export default function CommitteePage() {
               <span>👑</span>
               <span>{getSubCommitteeLocalizedName('Central Committee', language)}</span>
               <span style={{ fontSize: '0.72rem', background: 'rgba(99, 102, 241, 0.3)', padding: '2px 6px', borderRadius: '4px' }}>
-                {(mainCommittee.members?.length || 0) + (mainCommittee.lead ? 1 : 0)}
+                {(Array.isArray(mainCommittee.members) ? mainCommittee.members.length : 0) + (mainCommittee.lead?.name ? 1 : 0)}
               </span>
             </button>
           )}
 
           {/* 9 Sub-Committees Pills */}
           {subCommittees.map(sub => {
-            const count = (sub.memberCount ?? (sub.members?.length || 0)) + (sub.lead && sub.lead.name !== 'To Be Appointed' ? 1 : 0);
+            const hasLead = Boolean(sub.lead && sub.lead.name && sub.lead.name !== 'To Be Appointed');
+            const count = (Array.isArray(sub.members) ? sub.members.length : 0) + (hasLead ? 1 : 0);
             const isSelected = activeTab === sub.id || activeTab === sub.key;
 
             return (
@@ -652,7 +653,8 @@ export default function CommitteePage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '24px' }}>
               {subCommittees.map((sub) => {
                 const localized = getSubInfo(sub);
-                const rawCount = (sub.memberCount ?? (sub.members?.length || 0)) + (sub.lead && sub.lead.name !== 'To Be Appointed' ? 1 : 0);
+                const hasLead = Boolean(sub.lead && sub.lead.name && sub.lead.name !== 'To Be Appointed');
+                const rawCount = (Array.isArray(sub.members) ? sub.members.length : 0) + (hasLead ? 1 : 0);
                 const squads = getWorkingGroupsForCommittee(sub.id || sub.key, language);
 
                 return (
@@ -706,19 +708,22 @@ export default function CommitteePage() {
                       </p>
 
                       {/* President / Leadership Card */}
-                      {sub.lead && (
+                      {hasLead ? (
                         <div style={{ background: 'var(--btn-secondary-bg)', padding: '14px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px', border: '1px solid var(--border-subtle)' }}>
                           <span style={{ fontSize: '1.8rem', flexShrink: 0 }}>{sub.lead.avatar || '🏛️'}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '0.95rem' }}>
-                              {sub.lead.name === 'To Be Appointed'
-                                ? (language === 'km' ? 'រង់ចាំការចាត់តាំង' : language === 'zh' ? '待任命' : 'To Be Appointed')
-                                : sub.lead.name}
+                              {sub.lead.name}
                             </div>
                             <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: '800', marginTop: '2px' }}>
                               👑 {localizeOfficeRole(sub.lead.role, false, language)}
                             </div>
                           </div>
+                        </div>
+                      ) : (
+                        <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', border: '1px dashed var(--border-subtle)', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
+                          <span>🏛️</span>
+                          <span>{language === 'km' ? 'រង់ចាំការចាត់តាំងប្រធាន' : language === 'zh' ? '待任命分会主席' : 'President To Be Appointed'}</span>
                         </div>
                       )}
 
