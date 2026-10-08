@@ -88,6 +88,23 @@ export default function CommitteePage() {
     return list;
   }, [mainCommittee, subCommittees]);
 
+  // Helper to calculate distinct personnel count per committee (avoiding double-counting lead)
+  const getCommitteeUniqueCount = (c) => {
+    if (!c) return 0;
+    const names = new Set();
+    const leadName = (c.lead?.name || '').trim();
+    if (leadName && leadName !== 'To Be Appointed') {
+      names.add(leadName.toLowerCase());
+    }
+    if (Array.isArray(c.members)) {
+      c.members.forEach(m => {
+        const name = (m.name || '').trim();
+        if (name) names.add(name.toLowerCase());
+      });
+    }
+    return names.size;
+  };
+
   // Total metrics across the entire expo
   const totalStats = useMemo(() => {
     let totalPersonnel = 0;
@@ -95,10 +112,9 @@ export default function CommitteePage() {
     let totalCoPresidents = 0;
 
     allCommittees.forEach(c => {
-      const memCount = Array.isArray(c.members) ? c.members.length : 0;
-      const hasLead = Boolean(c.lead && c.lead.name && c.lead.name !== 'To Be Appointed');
-      totalPersonnel += memCount + (hasLead ? 1 : 0);
+      totalPersonnel += getCommitteeUniqueCount(c);
 
+      const hasLead = Boolean(c.lead && c.lead.name && c.lead.name !== 'To Be Appointed');
       if (hasLead) totalPresidents++;
 
       if (Array.isArray(c.members)) {
@@ -195,31 +211,41 @@ export default function CommitteePage() {
     };
   };
 
-  // Structured member lists for current selected committee
+  // Structured member lists for current selected committee (deduplicated)
   const currentMembersList = useMemo(() => {
     if (!currentSelectedCommittee) return [];
     const list = [];
+    const seenNames = new Set();
 
     // Lead (President)
-    if (currentSelectedCommittee.lead && currentSelectedCommittee.lead.name && currentSelectedCommittee.lead.name !== 'To Be Appointed') {
+    const leadName = (currentSelectedCommittee.lead?.name || '').trim();
+    if (leadName && leadName !== 'To Be Appointed') {
       list.push({
         ...currentSelectedCommittee.lead,
         isLead: true,
         roleType: 'president',
         workingGroup: currentSelectedCommittee.lead.workingGroup || 'Executive Leadership'
       });
+      seenNames.add(leadName.toLowerCase());
     }
 
-    // Members
+    // Members (skip if already added as Lead to avoid duplicates)
     if (Array.isArray(currentSelectedCommittee.members)) {
       currentSelectedCommittee.members.forEach(m => {
+        const mName = (m.name || '').trim();
+        if (!mName) return;
+        if (seenNames.has(mName.toLowerCase())) {
+          return; // Skip duplicate person
+        }
+        seenNames.add(mName.toLowerCase());
+
         const rLower = (m.role || '').toLowerCase();
         const isCoPres = rLower.includes('co-pres') || rLower.includes('copres') || rLower.includes('សហប្រធាន') || rLower.includes('共同主席');
         const isPres = !isCoPres && (rLower.includes('presid') || rLower.includes('chair') || rLower.includes('lead') || rLower.includes('ប្រធាន') || rLower.includes('主席'));
 
         list.push({
           ...m,
-          isLead: false,
+          isLead: isPres,
           roleType: isPres ? 'president' : isCoPres ? 'co_president' : 'member',
           workingGroup: m.workingGroup || m.team || ''
         });
@@ -444,15 +470,14 @@ export default function CommitteePage() {
               <span>👑</span>
               <span>{getSubCommitteeLocalizedName('Central Committee', language)}</span>
               <span style={{ fontSize: '0.72rem', background: 'rgba(99, 102, 241, 0.3)', padding: '2px 6px', borderRadius: '4px' }}>
-                {(Array.isArray(mainCommittee.members) ? mainCommittee.members.length : 0) + (mainCommittee.lead?.name ? 1 : 0)}
+                {getCommitteeUniqueCount(mainCommittee)}
               </span>
             </button>
           )}
 
           {/* 9 Sub-Committees Pills */}
           {subCommittees.map(sub => {
-            const hasLead = Boolean(sub.lead && sub.lead.name && sub.lead.name !== 'To Be Appointed');
-            const count = (Array.isArray(sub.members) ? sub.members.length : 0) + (hasLead ? 1 : 0);
+            const count = getCommitteeUniqueCount(sub);
             const isSelected = activeTab === sub.id || activeTab === sub.key;
 
             return (
@@ -603,8 +628,10 @@ export default function CommitteePage() {
                     </div>
                   )}
 
-                  {/* Members Preview */}
-                  {Array.isArray(mainCommittee.members) && mainCommittee.members.map((member, i) => (
+                  {/* Members Preview (excluding lead who is already featured in the primary Leadership card above) */}
+                  {Array.isArray(mainCommittee.members) && mainCommittee.members
+                    .filter(member => (member.name || '').trim().toLowerCase() !== (mainCommittee.lead?.name || '').trim().toLowerCase())
+                    .map((member, i) => (
                     <div key={i} className="glass-panel" style={{ padding: '22px', background: 'var(--btn-secondary-bg)', borderRadius: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '12px' }}>
@@ -654,7 +681,7 @@ export default function CommitteePage() {
               {subCommittees.map((sub) => {
                 const localized = getSubInfo(sub);
                 const hasLead = Boolean(sub.lead && sub.lead.name && sub.lead.name !== 'To Be Appointed');
-                const rawCount = (Array.isArray(sub.members) ? sub.members.length : 0) + (hasLead ? 1 : 0);
+                const rawCount = getCommitteeUniqueCount(sub);
                 const squads = getWorkingGroupsForCommittee(sub.id || sub.key, language);
 
                 return (
