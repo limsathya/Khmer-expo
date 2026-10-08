@@ -154,8 +154,8 @@ export default function RegistrationPage() {
         </div>
 
         {errorMsg && (
-          <div className="mb-8 p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-200 text-xs sm:text-sm flex items-start gap-3">
-            <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+          <div role="alert" aria-live="assertive" className="mb-8 p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-200 text-xs sm:text-sm flex items-start gap-3">
+            <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
             <div>
               <div className="font-bold">Registration Verification Error</div>
               <div>{errorMsg}</div>
@@ -165,10 +165,10 @@ export default function RegistrationPage() {
 
         {/* Step 1: Registration Type Picker */}
         <div className="mb-10">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-3" id="reg-type-label">
             1. Select Accreditation Classification
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div role="radiogroup" aria-labelledby="reg-type-label" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {REG_TYPES.map((type) => {
               const Icon = type.icon;
               const isSelected = formData.regType === type.id;
@@ -176,15 +176,17 @@ export default function RegistrationPage() {
                 <button
                   key={type.id}
                   type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   onClick={() => handleSelectType(type.id)}
-                  className={`text-left p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                  className={`text-left p-4 rounded-xl border transition-all flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-h-[44px] ${
                     isSelected 
                       ? 'bg-blue-900/30 border-blue-500 shadow-lg shadow-blue-900/20 ring-1 ring-blue-500' 
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/90'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <Icon size={18} className={isSelected ? 'text-blue-400' : 'text-slate-400'} />
+                    <Icon size={18} className={isSelected ? 'text-blue-400' : 'text-slate-400'} aria-hidden="true" />
                     <span className="font-bold text-xs text-white">{type.id}</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-normal">{type.desc}</p>
@@ -209,30 +211,33 @@ export default function RegistrationPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Full Name */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-fullName" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Full Official Name <span className="text-red-400">*</span>
               </label>
               <input
+                id="reg-fullName"
                 type="text"
                 name="fullName"
                 required
+                autoComplete="name"
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="e.g. Dr. Sok Chenda / Zhang Wei"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
 
             {/* Gender */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-gender" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Gender <span className="text-red-400">*</span>
               </label>
               <select
+                id="reg-gender"
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -242,109 +247,122 @@ export default function RegistrationPage() {
 
             {/* Nationality */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-nationality" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Nationality <span className="text-red-400">*</span>
               </label>
               <input
+                id="reg-nationality"
                 type="text"
                 name="nationality"
                 required
                 value={formData.nationality}
                 onChange={handleChange}
                 placeholder="e.g. Cambodian / Chinese"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
 
             {/* Organization / Company */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-organization" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Organization / Institution / Enterprise <span className="text-red-400">*</span>
               </label>
               <input
+                id="reg-organization"
                 type="text"
                 name="organization"
                 required
+                autoComplete="organization"
                 value={formData.organization}
                 onChange={handleChange}
                 placeholder="e.g. Royal University of Phnom Penh / Yunnan Logistics Group"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
 
             {/* Position / Title */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-position" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Official Position / Professional Title
               </label>
               <input
+                id="reg-position"
                 type="text"
                 name="position"
+                autoComplete="organization-title"
                 value={formData.position}
                 onChange={handleChange}
                 placeholder="e.g. Managing Director / Research Dean / Senior Buyer"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
 
             {/* Official Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-email" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Email Address (For Digital QR Pass Delivery) <span className="text-red-400">*</span>
               </label>
               <input
+                id="reg-email"
                 type="email"
                 name="email"
                 required
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="delegate@organization.org"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
 
             {/* Telephone / WhatsApp / WeChat */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-phone" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Phone Number / Mobile
               </label>
               <input
+                id="reg-phone"
                 type="tel"
                 name="phone"
+                autoComplete="tel"
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="+855 12 345 678 / +86 138 0000 0000"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
 
             {/* Country of Residence */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-country" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Country
               </label>
               <input
+                id="reg-country"
                 type="text"
                 name="country"
+                autoComplete="country-name"
                 value={formData.country}
                 onChange={handleChange}
                 placeholder="e.g. Cambodia / China"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
 
             {/* City */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label htmlFor="reg-city" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 City / Province
               </label>
               <input
+                id="reg-city"
                 type="text"
                 name="city"
+                autoComplete="address-level2"
                 value={formData.city}
                 onChange={handleChange}
                 placeholder="e.g. Phnom Penh / Kunming"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
               />
             </div>
           </div>
@@ -359,28 +377,31 @@ export default function RegistrationPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label htmlFor="reg-companyName" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Registered Company Name
                   </label>
                   <input
+                    id="reg-companyName"
                     type="text"
                     name="companyName"
+                    autoComplete="organization"
                     value={formData.companyName}
                     onChange={handleChange}
                     placeholder="Official Trade Entity Name"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label htmlFor="reg-industry" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Industry Sector
                   </label>
                   <select
+                    id="reg-industry"
                     name="industry"
                     value={formData.industry}
                     onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
                   >
                     <option value="Technology & AI">Technology, AI & Robotics</option>
                     <option value="Agribusiness & Food">Agribusiness & Natural Rubber/Rice</option>
@@ -392,45 +413,49 @@ export default function RegistrationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label htmlFor="reg-website" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Official Website
                   </label>
                   <input
+                    id="reg-website"
                     type="url"
                     name="website"
+                    autoComplete="url"
                     value={formData.website}
                     onChange={handleChange}
                     placeholder="https://company.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label htmlFor="reg-representativesCount" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Number of Delegated Representatives
                   </label>
                   <input
+                    id="reg-representativesCount"
                     type="number"
                     min="1"
                     max="20"
                     name="representativesCount"
                     value={formData.representativesCount}
                     onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label htmlFor="reg-businessDescription" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Brief Business Description & Products Showcase
                   </label>
                   <textarea
+                    id="reg-businessDescription"
                     rows={3}
                     name="businessDescription"
                     value={formData.businessDescription}
                     onChange={handleChange}
                     placeholder="Describe main export goods, target buyers, or bilateral collaboration goals..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
                   />
                 </div>
               </div>
@@ -439,16 +464,17 @@ export default function RegistrationPage() {
 
           {/* Notes or Special Requirements */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label htmlFor="reg-notes" className="block text-xs font-semibold text-slate-300 mb-1.5">
               Special Requirements / Dietary / Translation Assistance
             </label>
             <textarea
+              id="reg-notes"
               rows={2}
               name="notes"
               value={formData.notes}
               onChange={handleChange}
               placeholder="Any translation, wheelchair accessibility, or protocol requirements..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-white text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
             />
           </div>
 
@@ -468,7 +494,7 @@ export default function RegistrationPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wider text-white bg-gradient-to-r from-red-600 via-blue-700 to-blue-800 hover:from-red-500 hover:to-blue-700 disabled:opacity-50 shadow-xl shadow-red-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-4 min-h-[48px] rounded-xl font-bold text-sm uppercase tracking-wider text-white bg-gradient-to-r from-red-600 via-blue-700 to-blue-800 hover:from-red-500 hover:to-blue-700 disabled:opacity-50 shadow-xl shadow-red-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               {submitting ? (
                 <>

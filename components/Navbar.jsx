@@ -203,7 +203,10 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(prev => !prev)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+                  aria-haspopup="true"
+                  aria-expanded={userDropdownOpen}
+                  aria-label={`User menu for ${user.name}`}
+                  className="flex items-center gap-1.5 px-2.5 py-1 min-h-[40px] rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   <span className="text-sm">{user.avatar || '👤'}</span>
                   <span className="max-w-[80px] sm:max-w-[110px] truncate">{user.name}</span>
@@ -237,7 +240,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                className="hidden md:inline-flex items-center gap-1 px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <LogIn size={13} />
                 <span>{t('nav.signIn', 'Sign In')}</span>
@@ -246,11 +249,14 @@ export default function Navbar() {
 
             {/* Mobile Menu Hamburger */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(prev => !prev)}
-              className="xl:hidden p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition-colors"
-              aria-label="Open mobile menu"
+              className="xl:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label={mobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-nav-drawer"
             >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
@@ -258,7 +264,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="xl:hidden border-t border-slate-800 bg-[#060911]/95 px-4 pt-3 pb-6 space-y-2 backdrop-blur-2xl">
+        <nav id="mobile-nav-drawer" aria-label="Mobile Navigation" className="xl:hidden border-t border-slate-800 bg-[#060911]/95 px-4 pt-3 pb-6 space-y-2 backdrop-blur-2xl">
           <div className="grid grid-cols-2 gap-2">
             {navLinks.map((link) => {
               const Icon = link.icon;
@@ -291,7 +297,7 @@ export default function Navbar() {
               {language === 'km' ? 'ចុះឈ្មោះចូលរួម (Register Now)' : language === 'zh' ? '立即在线注册 (Register)' : 'Register for Expo 2026'}
             </Link>
           </div>
-        </div>
+        </nav>
       )}
     </header>
   );

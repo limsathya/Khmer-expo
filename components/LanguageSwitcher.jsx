@@ -23,6 +23,7 @@ export default function LanguageSwitcher() {
   return (
     <div style={{ position: 'relative' }} ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="btn btn-secondary btn-sm lang-switcher-btn"
         style={{
@@ -35,6 +36,8 @@ export default function LanguageSwitcher() {
           fontWeight: '700',
         }}
         aria-label="Select language"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
         title="Select language / ជ្រើសរើសភាសា / 选择语言"
       >
         <span className="lang-switcher-flag" style={{ fontSize: '1rem', lineHeight: 1 }}>{currentLanguage.flag}</span>
@@ -44,6 +47,8 @@ export default function LanguageSwitcher() {
 
       {isOpen && (
         <div
+          role="listbox"
+          aria-label="Languages"
           className="glass-panel dropdown-fade-in"
           style={{
             position: 'absolute',
@@ -66,6 +71,9 @@ export default function LanguageSwitcher() {
             return (
               <button
                 key={lang.code}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
                 onClick={() => {
                   setLanguage(lang.code);
                   setIsOpen(false);
