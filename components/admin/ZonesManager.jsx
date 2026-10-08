@@ -210,6 +210,15 @@ export default function ZonesManager({ showToast }) {
             <>
               <button
                 type="button"
+                onClick={openCreateModal}
+                className="btn btn-primary btn-sm"
+                style={{ fontWeight: '700' }}
+              >
+                <Plus size={15} />
+                <span>{language === 'km' ? '+ បន្ថែមសាល/តំបន់ថ្មី (Pop-up)' : language === 'zh' ? '+ 添加新展区/展厅 (弹窗)' : '+ Add Zone/Hall (Pop-up)'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setIsLightboxOpen(true)}
                 className="btn btn-secondary btn-sm"
               >
@@ -607,13 +616,44 @@ export default function ZonesManager({ showToast }) {
                       : `Dimensions: ${selectedBooth.dimensions} | Usable Area: ${selectedBooth.areaM2} | Venue: Tongde Kunming Plaza`}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedBooth(null)}
-                  className="btn btn-secondary btn-sm"
-                >
-                  ✕
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingIndex(null);
+                      setModalData({
+                        id: `booth-zone-${selectedBooth.number}-${Date.now()}`,
+                        code: selectedBooth.code,
+                        icon: '🎪',
+                        color: selectedBooth.zoneKey === 'yuehui' ? '#f59e0b' : '#3b82f6',
+                        capacity: '50',
+                        name: {
+                          en: `Booth ${selectedBooth.code} (${selectedBooth.zoneName})`,
+                          km: `ស្តង់ ${selectedBooth.code} (${selectedBooth.zoneNameKm})`,
+                          zh: `${selectedBooth.code}号展位 (${selectedBooth.zoneName})`
+                        },
+                        description: {
+                          en: `Standard exhibition booth ${selectedBooth.dimensions} in Tongde Kunming Plaza.`,
+                          km: `ស្តង់ពិព័រណ៍ស្តង់ដារ ${selectedBooth.dimensions} នៅទីលានថុងទ័រគុនមីង។`,
+                          zh: `位于同德昆明广场的标准展位，规格 ${selectedBooth.dimensions}。`
+                        }
+                      });
+                      setIsModalOpen(true);
+                    }}
+                    className="btn btn-primary btn-sm"
+                    style={{ fontWeight: '700' }}
+                  >
+                    <Plus size={14} />
+                    <span>{language === 'km' ? '+ បង្កើតតំបន់ស្តង់នេះ (Pop-up)' : language === 'zh' ? '+ 设为自选展区 (弹窗)' : '+ Register Zone (Pop-up)'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBooth(null)}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             )}
 
