@@ -38,7 +38,7 @@ export default function LanguageSwitcher() {
         aria-label="Select language"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        title="Select language / ជ្រើសរើសភាសា / 选择语言"
+        title="Select language: US (English), KM (ភាសាខ្មែរ), ZH (中文)"
       >
         <span className="lang-switcher-flag" style={{ fontSize: '1rem', lineHeight: 1 }}>{currentLanguage.flag}</span>
         <span className="lang-switcher-label" style={{ fontSize: '0.8rem' }}>{currentLanguage.shortLabel}</span>

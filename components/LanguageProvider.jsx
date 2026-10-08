@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { TRANSLATIONS, AVAILABLE_LANGUAGES, getNestedTranslation } from '@/lib/translations';
+import { TRANSLATIONS, AVAILABLE_LANGUAGES, getNestedTranslation, normalizeLanguageCode } from '@/lib/translations';
 
 const LanguageContext = createContext({
   language: 'en',
@@ -20,20 +20,21 @@ export function LanguageProvider({ children }) {
   const [mounted, setMounted] = useState(false);
   const [customTranslations, setCustomTranslations] = useState({ en: {}, km: {}, zh: {} });
 
+  const getLocaleAttr = (lang) => {
+    if (lang === 'km') return 'km-KH';
+    if (lang === 'zh') return 'zh-CN';
+    return 'en-US';
+  };
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem('expo_lang');
-      if (saved && (saved === 'en' || saved === 'km' || saved === 'zh')) {
-        setLanguageState(saved);
-        if (typeof document !== 'undefined') {
-          document.documentElement.lang = saved;
-          document.documentElement.setAttribute('data-lang', saved);
-        }
-      } else {
-        if (typeof document !== 'undefined') {
-          document.documentElement.lang = 'en';
-          document.documentElement.setAttribute('data-lang', 'en');
-        }
+      const normalized = normalizeLanguageCode(saved);
+      setLanguageState(normalized);
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = getLocaleAttr(normalized);
+        document.documentElement.setAttribute('data-lang', normalized);
+        document.cookie = `expo_lang=${normalized}; path=/; max-age=31536000; SameSite=Lax`;
       }
     } catch (e) {
       // ignore
@@ -58,19 +59,22 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.documentElement.lang = language;
+      document.documentElement.lang = getLocaleAttr(language);
       document.documentElement.setAttribute('data-lang', language);
+      document.cookie = `expo_lang=${language}; path=/; max-age=31536000; SameSite=Lax`;
     }
   }, [language]);
 
   const setLanguage = (newLang) => {
-    if (newLang === 'en' || newLang === 'km' || newLang === 'zh') {
-      setLanguageState(newLang);
-      try {
-        localStorage.setItem('expo_lang', newLang);
-      } catch (e) {
-        // ignore
+    const normalized = normalizeLanguageCode(newLang);
+    setLanguageState(normalized);
+    try {
+      localStorage.setItem('expo_lang', normalized);
+      if (typeof document !== 'undefined') {
+        document.cookie = `expo_lang=${normalized}; path=/; max-age=31536000; SameSite=Lax`;
       }
+    } catch (e) {
+      // ignore
     }
   };
 

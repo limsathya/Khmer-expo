@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCustomTranslationsFromDB, updateCustomTranslationsInDB } from '@/lib/db';
-import { TRANSLATIONS } from '@/lib/translations';
+import { TRANSLATIONS, normalizeLanguageCode } from '@/lib/translations';
 
 export async function GET() {
   try {
@@ -18,11 +18,13 @@ export async function GET() {
 export async function PATCH(request) {
   try {
     const body = await request.json();
-    const { lang, key, value, updates } = body;
+    const { lang: rawLang, key, value, updates } = body;
 
-    if (!lang) {
+    if (!rawLang) {
       return NextResponse.json({ error: 'Language (lang) is required' }, { status: 400 });
     }
+
+    const lang = normalizeLanguageCode(rawLang);
 
     let payload = {};
     if (updates && typeof updates === 'object') {
