@@ -32,11 +32,11 @@ import { useAuth } from '@/components/AuthProvider';
 import { useLanguage } from '@/components/LanguageProvider';
 import { useSettings } from '@/components/SettingsProvider';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, toggleTheme, mounted } = useTheme();
   const { user, logout, isAdmin } = useAuth();
   const { t, language } = useLanguage();
   const { expoConfig, getExpoName, getExpoShortName } = useSettings();
@@ -117,7 +117,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="glass-header sticky top-0 z-50 w-full border-b border-slate-800/80 bg-[#060911]/90 backdrop-blur-xl">
+    <header className="glass-header sticky top-0 z-50 w-full backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3">
           {/* Left: Brand Logo & Title */}
@@ -129,7 +129,7 @@ export default function Navbar() {
               🇰🇭
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-sm sm:text-base text-white tracking-tight leading-tight group-hover:text-blue-400 transition-colors">
+              <span className="font-extrabold text-sm sm:text-base text-[var(--text-main)] tracking-tight leading-tight group-hover:text-blue-400 transition-colors">
                 {getExpoName(language)}
               </span>
               <span className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">
@@ -180,22 +180,8 @@ export default function Navbar() {
             {/* Language Switcher */}
             <LanguageSwitcher />
 
-            {/* Dark / Light Mode Toggle */}
-            <button
-              onClick={() => {
-                setRippleKey(prev => prev + 1);
-                toggleTheme();
-              }}
-              className="theme-toggle-btn p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-              title={theme === 'dark' ? t('nav.lightMode', 'Light Mode') : t('nav.darkMode', 'Dark Mode')}
-              aria-label="Toggle Dark/Light Mode"
-            >
-              {mounted && theme === 'light' ? (
-                <Sun size={16} className="text-amber-400" />
-              ) : (
-                <Moon size={16} className="text-indigo-400" />
-              )}
-            </button>
+            {/* Dark / Light / System Theme Switcher */}
+            <ThemeSwitcher />
 
             {/* User Profile or Admin Link */}
             {user ? (
@@ -264,7 +250,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <nav id="mobile-nav-drawer" aria-label="Mobile Navigation" className="xl:hidden border-t border-slate-800 bg-[#060911]/95 px-4 pt-3 pb-6 space-y-2 backdrop-blur-2xl">
+        <nav id="mobile-nav-drawer" aria-label="Mobile Navigation" className="xl:hidden border-t border-[var(--border-subtle)] bg-[var(--header-bg)] px-4 pt-3 pb-6 space-y-2 backdrop-blur-2xl">
           <div className="grid grid-cols-2 gap-2">
             {navLinks.map((link) => {
               const Icon = link.icon;

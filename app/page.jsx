@@ -176,14 +176,14 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#060911] text-slate-100 overflow-hidden">
+    <div className="min-h-screen text-[var(--text-main)] overflow-hidden">
       {/* 1. HERO SECTION */}
       <section className="relative pt-8 pb-16 sm:pt-14 sm:pb-24 lg:pt-20 lg:pb-32 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
         {/* Ambient Bilateral Glow Background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
           <div className="absolute top-1/3 right-1/4 w-[450px] h-[450px] bg-red-600/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32 bg-gradient-to-t from-[#060911] to-transparent" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32 bg-gradient-to-t from-[var(--bg-main)] to-transparent" />
         </div>
 
         <div className="max-w-6xl mx-auto relative z-10 text-center">
@@ -238,8 +238,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/program"
-              className="btn-register"
-              style={{ background: 'rgba(30, 41, 59, 0.8)', borderColor: 'rgba(255, 255, 255, 0.15)', boxShadow: 'none', color: '#cbd5e1' }}
+              className="btn-register btn-register-secondary"
             >
               <span>EXPLORE EXPO</span>
             </Link>

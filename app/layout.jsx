@@ -39,8 +39,31 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="dark" data-scroll-behavior="smooth">
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var cookieMatch = document.cookie.match(/expo_theme=([^;]+)/);
+                  var cookieTheme = cookieMatch ? decodeURIComponent(cookieMatch[1].trim()) : null;
+                  var saved = cookieTheme || localStorage.getItem('expo_theme') || 'system';
+                  var resolved = saved;
+                  if (saved === 'system') {
+                    resolved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                  }
+                  if (resolved !== 'dark' && resolved !== 'light') {
+                    resolved = 'dark';
+                  }
+                  document.documentElement.setAttribute('data-theme', resolved);
+                  document.documentElement.setAttribute('data-theme-mode', saved);
+                  document.documentElement.style.colorScheme = resolved;
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300..900;1,300..900&family=Noto+Serif+Khmer:wght@300..900&family=Noto+Serif+SC:wght@300..900&display=swap" rel="stylesheet" />
