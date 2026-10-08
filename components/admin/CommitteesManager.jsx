@@ -278,26 +278,44 @@ export default function CommitteesManager({ showToast }) {
     }
   };
 
-  // Get members belonging to the committee currently being edited
+  // Get members belonging to the committee currently being edited (deduplicated by name)
   const committeeRosterMembers = useMemo(() => {
     if (!editingCommittee) return [];
     const commKey = editingCommittee.key || editingCommittee.id;
-    return allMembers.filter(m => 
-      m.committeeKey === commKey || 
-      m.committeeId === editingCommittee.id || 
-      m.committee === commKey ||
-      m.committeeName === commKey
-    );
+    const commName = editingCommittee.name || commKey;
+    const seen = new Set();
+    return allMembers.filter(m => {
+      const nameKey = (m.name || '').trim().toLowerCase();
+      if (!nameKey || seen.has(nameKey)) return false;
+
+      const commList = Array.isArray(m.committees) ? m.committees : [m.committee, m.committeeName, m.committeeKey, m.committeeId].filter(Boolean);
+      const matches = commList.some(c => 
+        c === commKey || 
+        c === commName || 
+        c.toLowerCase() === commKey.toLowerCase() || 
+        c.toLowerCase() === commName.toLowerCase() ||
+        (commKey === 'main-committee' && (m.centralCommittee || m.alsoInCentralCommittee))
+      );
+
+      if (matches) {
+        seen.add(nameKey);
+        return true;
+      }
+      return false;
+    });
   }, [editingCommittee, allMembers]);
 
-  // Other members from outside this committee
+  // Other members from outside this committee (deduplicated by name, excluding those in committeeRosterMembers)
   const otherRosterMembers = useMemo(() => {
     if (!editingCommittee) return allMembers;
-    const commKey = editingCommittee.key || editingCommittee.id;
-    return allMembers.filter(m => 
-      !(m.committeeKey === commKey || m.committeeId === editingCommittee.id || m.committee === commKey || m.committeeName === commKey)
-    );
-  }, [editingCommittee, allMembers]);
+    const seen = new Set(committeeRosterMembers.map(m => (m.name || '').trim().toLowerCase()));
+    return allMembers.filter(m => {
+      const nameKey = (m.name || '').trim().toLowerCase();
+      if (!nameKey || seen.has(nameKey)) return false;
+      seen.add(nameKey);
+      return true;
+    });
+  }, [editingCommittee, allMembers, committeeRosterMembers]);
 
   return (
     <div>

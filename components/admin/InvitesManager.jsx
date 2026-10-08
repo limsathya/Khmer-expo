@@ -596,100 +596,46 @@ export default function InvitesManager({ showToast }) {
             </p>
 
             <form onSubmit={handleCreateInvite} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* CHOOSE MEMBER FROM ROSTER */}
+              {/* CANDIDATE NAME (ONLY FOR MEMBERS NOT YET IN ROSTER) */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label className="form-label" style={{ marginBottom: 0 }}>
-                    <span style={{ color: 'var(--primary)', fontWeight: '800' }}>* </span>
-                    {language === 'km' ? 'ជ្រើសរើសបេក្ខជនពីបញ្ជីឈ្មោះ (Member Roster)' : language === 'zh' ? '从成员名册中选择被邀请人' : 'Choose Invitee from Member Roster'}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsCustomInvitee(!isCustomInvitee);
-                      if (!isCustomInvitee) {
-                        setSelectedMemberId('__manual__');
-                        setInviteNote('');
-                      } else {
-                        setSelectedMemberId('');
-                        setInviteNote('');
-                      }
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                  >
-                    {isCustomInvitee 
-                      ? (language === 'km' ? '👥 ជ្រើសរើសពីបញ្ជីឈ្មោះ' : language === 'zh' ? '👥 从名册中选择' : '👥 Choose from Roster')
-                      : (language === 'km' ? '✏️ វាយឈ្មោះដោយផ្ទាល់' : language === 'zh' ? '✏️ 手动输入' : '✏️ Type Manually')}
-                  </button>
-                </div>
+                <label className="form-label">
+                  <span style={{ color: 'var(--primary)', fontWeight: '800' }}>* </span>
+                  {language === 'km' 
+                    ? 'ឈ្មោះបេក្ខជនសមាជិកថ្មី (មិនទាន់មានក្នុងបញ្ជី Roster) *' 
+                    : language === 'zh' 
+                    ? '新入会候选人姓名 (未在现有成员名册中) *' 
+                    : 'Candidate Full Name (Must NOT be in existing roster) *'}
+                </label>
 
-                {!isCustomInvitee ? (
-                  <select
-                    value={selectedMemberId}
-                    onChange={(e) => handleSelectMember(e.target.value)}
-                    className="form-input"
-                  >
-                    <option value="">
-                      {language === 'km' ? '-- ជ្រើសរើសសមាជិកពីបញ្ជីឈ្មោះ (សូមជ្រើស) --' : language === 'zh' ? '-- 从花名册中选择成员（推荐） --' : '-- Choose Member from Roster (Recommended) --'}
-                    </option>
-                    {/* Members in selected committee */}
-                    {allMembers.filter(m => {
-                      const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
-                      const tName = targetCommittee.toLowerCase();
-                      return cName === tName || tName.includes(cName) || (cName && tName.includes(cName));
-                    }).length > 0 && (
-                      <optgroup label={language === 'km' ? `សមាជិកក្នុងគណៈកម្មការនេះ (${targetCommittee})` : language === 'zh' ? `本分委会成员 (${targetCommittee})` : `Members in Target Committee`}>
-                        {allMembers.filter(m => {
-                          const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
-                          const tName = targetCommittee.toLowerCase();
-                          return cName === tName || tName.includes(cName) || (cName && tName.includes(cName));
-                        }).map(m => (
-                          <option key={m.id || m.name} value={m.id || m.name}>
-                            👤 {m.name} ({m.role})
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
+                <input
+                  type="text"
+                  required
+                  placeholder={language === 'km' ? 'ឧ. សុខ ចិន្តា (Sok Chenda)' : language === 'zh' ? '例如：张三 (Zhang San)' : 'e.g. Alex Morgan'}
+                  value={inviteNote}
+                  onChange={(e) => setInviteNote(e.target.value)}
+                  className="form-input"
+                />
 
-                    {/* Members from other committees */}
-                    {allMembers.filter(m => {
-                      const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
-                      const tName = targetCommittee.toLowerCase();
-                      return !(cName === tName || tName.includes(cName) || (cName && tName.includes(cName)));
-                    }).length > 0 && (
-                      <optgroup label={language === 'km' ? 'សមាជិកពីគណៈកម្មការផ្សេង' : language === 'zh' ? '其他分委会成员' : 'Members from Other Committees'}>
-                        {allMembers.filter(m => {
-                          const cName = (m.committee || m.committeeName || m.committeeKey || '').toLowerCase();
-                          const tName = targetCommittee.toLowerCase();
-                          return !(cName === tName || tName.includes(cName) || (cName && tName.includes(cName)));
-                        }).map(m => (
-                          <option key={m.id || m.name} value={m.id || m.name}>
-                            👤 {m.name} — {getSubCommitteeLocalizedName(m.committee || m.committeeName, language) || (m.committee || m.committeeName)} ({m.role})
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-
-                    <option value="__manual__">
-                      ✏️ {language === 'km' ? 'បេក្ខជនថ្មី (មិនទាន់មានក្នុងបញ្ជី)' : language === 'zh' ? '新候选人（不在名册中）' : 'New Invitee (Not in roster yet)...'}
-                    </option>
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Alex Morgan"
-                    value={inviteNote}
-                    onChange={(e) => setInviteNote(e.target.value)}
-                    className="form-input"
-                  />
-                )}
-
-                {inviteNote && !isCustomInvitee && (
-                  <div style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.1)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                    <span>👤 <strong>{inviteNote}</strong> {targetRole ? `• ${targetRole}` : ''}</span>
+                {/* Live validation against roster */}
+                {Boolean(inviteNote.trim() && allMembers.some(m => (m.name || '').trim().toLowerCase() === inviteNote.trim().toLowerCase())) ? (
+                  <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#ef4444', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '6px 12px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertCircle size={14} />
+                    <span>
+                      {language === 'km'
+                        ? `⚠️ "${inviteNote}" មានឈ្មោះក្នុងបញ្ជី Roster រួចហើយ! ការចុះឈ្មោះគឺសម្រាប់តែសមាជិកថ្មីដែលមិនទាន់មានក្នុងបញ្ជីប៉ុណ្ណោះ។`
+                        : language === 'zh'
+                        ? `⚠️ “${inviteNote}”已在正式成员名册中！仅允许未在名册中的新成员进行邀请注册。`
+                        : `⚠️ "${inviteNote}" is already an approved member in the roster! Registration is only for members not yet in the roster.`}
+                    </span>
                   </div>
-                )}
+                ) : inviteNote.trim() ? (
+                  <div style={{ marginTop: '6px', fontSize: '0.75rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <CheckCircle2 size={13} />
+                    <span>
+                      {language === 'zh' ? `✓ “${inviteNote}”符合新入会成员资格（未在名册中）` : `✓ "${inviteNote}" eligible for new member registration (not in roster)`}
+                    </span>
+                  </div>
+                ) : null}
               </div>
 
               {/* TARGET COMMITTEE SELECTION */}

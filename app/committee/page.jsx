@@ -105,23 +105,30 @@ export default function CommitteePage() {
     return names.size;
   };
 
-  // Total metrics across the entire expo
+  // Total metrics across the entire expo (deduplicated: each person counted only 1 time)
   const totalStats = useMemo(() => {
-    let totalPersonnel = 0;
-    let totalPresidents = 0;
-    let totalCoPresidents = 0;
+    const allUniquePersonnel = new Set();
+    const uniquePresidents = new Set();
+    const uniqueCoPresidents = new Set();
 
     allCommittees.forEach(c => {
-      totalPersonnel += getCommitteeUniqueCount(c);
-
-      const hasLead = Boolean(c.lead && c.lead.name && c.lead.name !== 'To Be Appointed');
-      if (hasLead) totalPresidents++;
+      const leadName = (c.lead?.name || '').trim();
+      if (leadName && leadName !== 'To Be Appointed') {
+        const leadKey = leadName.toLowerCase();
+        allUniquePersonnel.add(leadKey);
+        uniquePresidents.add(leadKey);
+      }
 
       if (Array.isArray(c.members)) {
         c.members.forEach(m => {
-          const r = (m.role || '').toLowerCase();
-          if (r.includes('co-pres') || r.includes('copres') || r.includes('សហប្រធាន') || r.includes('共同主席')) {
-            totalCoPresidents++;
+          const mName = (m.name || '').trim();
+          if (mName) {
+            const mKey = mName.toLowerCase();
+            allUniquePersonnel.add(mKey);
+            const r = (m.role || '').toLowerCase();
+            if (r.includes('co-pres') || r.includes('copres') || r.includes('សហប្រធាន') || r.includes('共同主席')) {
+              uniqueCoPresidents.add(mKey);
+            }
           }
         });
       }
@@ -129,9 +136,9 @@ export default function CommitteePage() {
 
     return {
       committees: allCommittees.length,
-      personnel: totalPersonnel,
-      presidents: totalPresidents,
-      coPresidents: totalCoPresidents
+      personnel: allUniquePersonnel.size,
+      presidents: uniquePresidents.size,
+      coPresidents: uniqueCoPresidents.size
     };
   }, [allCommittees]);
 

@@ -150,6 +150,24 @@ export default function MembersManager({ showToast }) {
           if (showToast) showToast(errData.error || 'Failed to update member', 'error');
         }
       } else {
+        // Enforce: Register ONLY for members who are NOT in the roster!
+        const cleanName = (formData.name || '').trim().toLowerCase();
+        const alreadyExists = members.some(m => (m.name || '').trim().toLowerCase() === cleanName);
+        if (alreadyExists) {
+          if (showToast) {
+            showToast(
+              language === 'km' 
+                ? `⚠️ "${formData.name}" មានឈ្មោះក្នុងបញ្ជី Roster រួចហើយ! ការចុះឈ្មោះគឺសម្រាប់តែសមាជិកថ្មីដែលមិនទាន់មានក្នុងបញ្ជីប៉ុណ្ណោះ។` 
+                : language === 'zh' 
+                ? `⚠️ “${formData.name}”已在正式成员名册中！仅允许未在名册中的新成员进行录入。` 
+                : `⚠️ "${formData.name}" is already an approved member in the roster! Registration is only for members not yet in the roster.`,
+              'error'
+            );
+          }
+          setSaving(false);
+          return;
+        }
+
         const res = await fetch('/api/committees/members', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -180,7 +198,7 @@ export default function MembersManager({ showToast }) {
     }
   };
 
-  // Bulk Import Handler (Handles 100+ members in 1 click)
+  // Bulk Import Handler (Handles 100+ members in 1 click, strictly filtering out existing roster members)
   const handleBulkImportSubmit = async (e) => {
     e.preventDefault();
     const parsedNames = bulkFormData.namesText
@@ -193,11 +211,38 @@ export default function MembersManager({ showToast }) {
       return;
     }
 
+    // Filter out names already in roster
+    const existingNames = new Set(members.map(m => (m.name || '').trim().toLowerCase()));
+    const eligibleNames = [];
+    const alreadyInRoster = [];
+
+    parsedNames.forEach(n => {
+      if (existingNames.has(n.toLowerCase())) {
+        alreadyInRoster.push(n);
+      } else {
+        eligibleNames.push(n);
+      }
+    });
+
+    if (eligibleNames.length === 0) {
+      if (showToast) {
+        showToast(
+          language === 'km'
+            ? `⚠️ ឈ្មោះទាំងអស់ (${alreadyInRoster.join(', ')}) សុទ្ធតែមានក្នុងបញ្ជី Roster រួចហើយ! មិនអាចបញ្ចូលស្ទួនបានទេ។`
+            : language === 'zh'
+            ? `⚠️ 所填写的成员 (${alreadyInRoster.join(', ')}) 均已在成员名册中！仅允许未在名册中的人员。`
+            : `⚠️ All entered names (${alreadyInRoster.join(', ')}) are already in the roster! Registration is only for members not yet in roster.`,
+          'error'
+        );
+      }
+      return;
+    }
+
     setBulkImporting(true);
     try {
       const payload = {
         committeeId: bulkFormData.committee,
-        members: parsedNames.map(name => ({
+        members: eligibleNames.map(name => ({
           name,
           role: bulkFormData.role || 'Member',
           avatar: bulkFormData.avatar || '👤',
@@ -214,7 +259,9 @@ export default function MembersManager({ showToast }) {
 
       if (res.ok) {
         const data = await res.json();
-        if (showToast) showToast(`Successfully imported ${data.count || parsedNames.length} members!`);
+        const count = data.count || eligibleNames.length;
+        const skippedMsg = alreadyInRoster.length > 0 ? ` (${alreadyInRoster.length} duplicate roster members skipped)` : '';
+        if (showToast) showToast(`Successfully imported ${count} new members!${skippedMsg}`);
         setIsBulkModalOpen(false);
         await loadMembers();
       } else {
@@ -258,14 +305,22 @@ export default function MembersManager({ showToast }) {
 
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
-      if (selectedCommittee !== 'all' && m.committee !== selectedCommittee && m.committeeName !== selectedCommittee && m.committeeKey !== selectedCommittee && m.committeeId !== selectedCommittee) {
-        return false;
+      if (selectedCommittee !== 'all') {
+        const commList = Array.isArray(m.committees) 
+          ? m.committees 
+          : [m.committee, m.committeeName, m.committeeKey, m.committeeId].filter(Boolean);
+        const matchesComm = commList.some(c => 
+          c === selectedCommittee || 
+          c.toLowerCase() === selectedCommittee.toLowerCase() ||
+          (selectedCommittee === 'Central Committee' && (m.centralCommittee || m.alsoInCentralCommittee))
+        );
+        if (!matchesComm) return false;
       }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchName = m.name?.toLowerCase().includes(q);
         const matchRole = m.role?.toLowerCase().includes(q);
-        const matchComm = m.committeeName?.toLowerCase().includes(q);
+        const matchComm = (m.committeeName || m.committee || (Array.isArray(m.committees) ? m.committees.join(' ') : ''))?.toLowerCase().includes(q);
         if (!matchName && !matchRole && !matchComm) return false;
       }
       return true;
@@ -502,10 +557,28 @@ export default function MembersManager({ showToast }) {
                       })()}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: '600' }}>
-                          {getSubCommitteeLocalizedName(mem.committee || mem.committeeName || mem.committeeKey, language)}
-                        </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {Array.isArray(mem.committees) && mem.committees.length > 1 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {mem.committees.map(cName => (
+                              <span key={cName} style={{ 
+                                fontSize: '0.74rem', 
+                                color: 'var(--primary)', 
+                                fontWeight: '700',
+                                background: 'rgba(99, 102, 241, 0.1)',
+                                border: '1px solid rgba(99, 102, 241, 0.25)',
+                                padding: '2px 7px',
+                                borderRadius: '4px'
+                              }}>
+                                {getSubCommitteeLocalizedName(cName, language) || cName}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: '600' }}>
+                            {getSubCommitteeLocalizedName(mem.committee || mem.committeeName || mem.committeeKey, language)}
+                          </span>
+                        )}
                         {mem.workingGroup && (
                           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <span>🏢</span> {mem.workingGroup}
@@ -608,17 +681,33 @@ export default function MembersManager({ showToast }) {
 
                   {/* Affiliation Badges */}
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
-                    <span style={{
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      fontWeight: '700',
-                      background: 'rgba(99, 102, 241, 0.12)',
-                      color: 'var(--primary)',
-                      border: '1px solid rgba(99, 102, 241, 0.25)'
-                    }}>
-                      {getSubCommitteeLocalizedName(mem.committee || mem.committeeName || mem.committeeKey, language)}
-                    </span>
+                    {Array.isArray(mem.committees) && mem.committees.length > 1 ? (
+                      mem.committees.map(cName => (
+                        <span key={cName} style={{
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.74rem',
+                          fontWeight: '700',
+                          background: 'rgba(99, 102, 241, 0.12)',
+                          color: 'var(--primary)',
+                          border: '1px solid rgba(99, 102, 241, 0.25)'
+                        }}>
+                          {getSubCommitteeLocalizedName(cName, language) || cName}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        background: 'rgba(99, 102, 241, 0.12)',
+                        color: 'var(--primary)',
+                        border: '1px solid rgba(99, 102, 241, 0.25)'
+                      }}>
+                        {getSubCommitteeLocalizedName(mem.committee || mem.committeeName || mem.committeeKey, language)}
+                      </span>
+                    )}
 
                     {mem.workingGroup && (
                       <span style={{
