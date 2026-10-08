@@ -55,6 +55,18 @@ import ZonesManager from '@/components/admin/ZonesManager';
 import TranslationsManager from '@/components/admin/TranslationsManager';
 import CategoriesManager from '@/components/admin/CategoriesManager';
 import CommitteesManager from '@/components/admin/CommitteesManager';
+import RegistrationsManager from '@/components/admin/RegistrationsManager';
+import ExhibitorsManager from '@/components/admin/ExhibitorsManager';
+import BoothsManager from '@/components/admin/BoothsManager';
+import ProgramManager from '@/components/admin/ProgramManager';
+import SpeakersManager from '@/components/admin/SpeakersManager';
+import VipManager from '@/components/admin/VipManager';
+import SubcommitteesManager from '@/components/admin/SubcommitteesManager';
+import TasksManager from '@/components/admin/TasksManager';
+import CheckinManager from '@/components/admin/CheckinManager';
+import SponsorsManager from '@/components/admin/SponsorsManager';
+import NewsManager from '@/components/admin/NewsManager';
+import ReportsManager from '@/components/admin/ReportsManager';
 
 const ALL_DEFAULT_COMMITTEES = [
   { ...MAIN_COMMITTEE, type: 'main' },
@@ -1539,6 +1551,57 @@ export default function AdminDashboardPage() {
           ========================================================================= */}
       {activeSection === 'committees' && (
         <CommitteesManager showToast={showToast} />
+      )}
+
+      {/* =========================================================================
+          SECTIONS: EXPO 2026 EVENT OPERATIONS & MODULES
+          ========================================================================= */}
+      {activeSection === 'registrations' && (
+        <RegistrationsManager showToast={showToast} />
+      )}
+
+      {activeSection === 'exhibitors' && (
+        <ExhibitorsManager showToast={showToast} />
+      )}
+
+      {activeSection === 'booths' && (
+        <BoothsManager showToast={showToast} />
+      )}
+
+      {activeSection === 'program' && (
+        <ProgramManager showToast={showToast} />
+      )}
+
+      {activeSection === 'speakers' && (
+        <SpeakersManager showToast={showToast} />
+      )}
+
+      {activeSection === 'vip' && (
+        <VipManager showToast={showToast} />
+      )}
+
+      {activeSection === 'subcommittees' && (
+        <SubcommitteesManager showToast={showToast} />
+      )}
+
+      {activeSection === 'tasks' && (
+        <TasksManager showToast={showToast} />
+      )}
+
+      {activeSection === 'checkin' && (
+        <CheckinManager showToast={showToast} />
+      )}
+
+      {activeSection === 'sponsors' && (
+        <SponsorsManager showToast={showToast} />
+      )}
+
+      {activeSection === 'news' && (
+        <NewsManager showToast={showToast} />
+      )}
+
+      {activeSection === 'reports' && (
+        <ReportsManager showToast={showToast} />
       )}
 
       {/* =========================================================================

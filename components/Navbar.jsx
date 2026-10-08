@@ -16,7 +16,16 @@ import {
   LayoutDashboard, 
   ChevronDown, 
   PlusCircle, 
-  ShieldCheck 
+  ShieldCheck,
+  Building2,
+  MapPin,
+  Award,
+  FileText,
+  Image,
+  Info,
+  Menu,
+  X,
+  UserCheck
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { useAuth } from '@/components/AuthProvider';
@@ -34,6 +43,7 @@ export default function Navbar() {
   
   const [rippleKey, setRippleKey] = useState(0);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -51,12 +61,53 @@ export default function Navbar() {
     };
   }, []);
 
-  // ONLY 3 primary navigation links on the navbar:
-  // "Submit Event" and "Admin" are removed per user requirement!
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Full International Official Navigation Suite
   const navLinks = [
-    { href: '/', label: t('nav.overview', 'Overview'), icon: Layers },
-    { href: '/timeline', label: t('nav.timeline', 'Timeline'), icon: Calendar },
-    { href: '/committee', label: t('nav.committees', 'Committees'), icon: Users },
+    { 
+      href: '/about', 
+      label: language === 'km' ? 'អំពីពិព័រណ៍' : language === 'zh' ? '关于博览会' : 'About', 
+      icon: Info 
+    },
+    { 
+      href: '/program', 
+      label: language === 'km' ? 'កម្មវិធី' : language === 'zh' ? '活动日程' : 'Program', 
+      icon: Calendar 
+    },
+    { 
+      href: '/exhibitors', 
+      label: language === 'km' ? 'អ្នកតាំងពិព័រណ៍' : language === 'zh' ? '参展商' : 'Exhibitors', 
+      icon: Building2 
+    },
+    { 
+      href: '/speakers', 
+      label: language === 'km' ? 'វាគ្មិន' : language === 'zh' ? '主讲嘉宾' : 'Speakers', 
+      icon: Award 
+    },
+    { 
+      href: '/committees', 
+      label: language === 'km' ? 'គណៈកម្មការ' : language === 'zh' ? '组委会' : 'Committees', 
+      icon: Users 
+    },
+    { 
+      href: '/venue', 
+      label: language === 'km' ? 'ទីតាំង & ស្តង់' : language === 'zh' ? '展馆导览' : 'Venue', 
+      icon: MapPin 
+    },
+    { 
+      href: '/news', 
+      label: language === 'km' ? 'ព័ត៌មាន' : language === 'zh' ? '新闻动态' : 'News', 
+      icon: FileText 
+    },
+    { 
+      href: '/gallery', 
+      label: language === 'km' ? 'វិចិត្រសាល' : language === 'zh' ? '媒体图库' : 'Gallery', 
+      icon: Image 
+    },
   ];
 
   const handleLogout = async () => {
@@ -65,391 +116,183 @@ export default function Navbar() {
     router.push('/');
   };
 
-  const handleNavigate = (path) => {
-    setUserDropdownOpen(false);
-    router.push(path);
-  };
-
   return (
-    <header className="glass-header sticky top-0 z-50" style={{ width: '100%' }}>
-      <div className="nav-header-inner">
-        {/* Left: Brand Logo & Name (1 line) */}
-        <Link 
-          href="/" 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px', 
-            textDecoration: 'none',
-            flexShrink: 0 
-          }}
-        >
-          {expoConfig.logoType === 'image' && expoConfig.logoUrl ? (
-            <img 
-              src={expoConfig.logoUrl} 
-              alt="Expo Logo" 
-              style={{ width: '34px', height: '34px', borderRadius: '9px', objectFit: 'cover', flexShrink: 0, boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)' }} 
-            />
-          ) : expoConfig.logoType === 'text' ? (
-            <div style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '9px',
-              background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: '900',
-              fontSize: '1.1rem',
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
-              flexShrink: 0
-            }}>
-              {expoConfig.logoText || 'E'}
-            </div>
-          ) : (
-            <div style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '9px',
-              background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
-              flexShrink: 0
-            }}>
-              <Sparkles size={18} />
-            </div>
-          )}
-          <span className="nav-brand-title nav-brand-full" style={{ 
-            fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', 
-            fontWeight: '800', 
-            letterSpacing: '-0.02em', 
-            color: 'var(--text-main)', 
-            lineHeight: '1.2' 
-          }}>
-            {getExpoName(language)}
-          </span>
-          <span className="nav-brand-title nav-brand-short" style={{ 
-            fontSize: 'clamp(0.82rem, 2.8vw, 0.95rem)', 
-            fontWeight: '800', 
-            letterSpacing: '-0.02em', 
-            color: 'var(--text-main)', 
-            lineHeight: '1.2' 
-          }}>
-            {getExpoShortName(language)}
-          </span>
-        </Link>
-
-        {/* Center: Main Navigation (Overview, Timeline, Committees only) */}
-        <nav className="nav-links-container" style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '4px', 
-          flexShrink: 0,
-          whiteSpace: 'nowrap'
-        }}>
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname === link.href;
-
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`nav-link-btn ${isActive ? 'active' : ''}`}
-                title={link.label}
-                aria-label={link.label}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
-                  fontWeight: '600',
-                  textDecoration: 'none',
-                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                  color: isActive ? 'var(--text-main)' : 'var(--text-muted)',
-                  background: isActive ? 'var(--btn-secondary-bg)' : 'transparent',
-                  border: isActive ? '1px solid var(--border-subtle)' : '1px solid transparent',
-                  whiteSpace: 'nowrap',
-                  lineHeight: '1.4',
-                  position: 'relative'
-                }}
-              >
-                <Icon size={14} style={{ flexShrink: 0 }} />
-                <span className="nav-link-text">{link.label}</span>
-                {isActive && <span className="nav-active-pip" />}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Right Controls: Language Switcher, Theme Toggle, User Profile Menu */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px', 
-          flexShrink: 0,
-          whiteSpace: 'nowrap'
-        }}>
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-
-          {/* Dark / Light Mode Motion Animated Toggle */}
-          <button
-            onClick={() => {
-              setRippleKey(prev => prev + 1);
-              toggleTheme();
-            }}
-            className="theme-toggle-btn"
-            title={theme === 'dark' ? t('nav.lightMode', 'Light Mode') : t('nav.darkMode', 'Dark Mode')}
-            aria-label="Toggle Dark/Light Mode"
-            style={{ flexShrink: 0 }}
+    <header className="glass-header sticky top-0 z-50 w-full border-b border-slate-800/80 bg-[#060911]/90 backdrop-blur-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-3">
+          {/* Left: Brand Logo & Title */}
+          <Link 
+            href="/" 
+            className="flex items-center gap-3 shrink-0 no-underline group"
           >
-            {rippleKey > 0 && <span key={rippleKey} className="theme-click-pulse" />}
-            <div className="theme-toggle-stage">
-              {mounted && theme === 'light' ? (
-                <div key={`sun-${rippleKey}`} className="theme-motion-sun">
-                  <Sun size={18} />
-                </div>
-              ) : (
-                <div key={`moon-${rippleKey}`} className="theme-motion-moon">
-                  <Moon size={17} />
-                  <span className="theme-motion-star" />
-                </div>
-              )}
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-700 via-indigo-700 to-red-600 flex items-center justify-center text-white font-bold text-base shadow-md shadow-blue-900/40 group-hover:scale-105 transition-transform">
+              🇰🇭
             </div>
-          </button>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm sm:text-base text-white tracking-tight leading-tight group-hover:text-blue-400 transition-colors">
+                {getExpoName(language)}
+              </span>
+              <span className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">
+                Kunming 2026
+              </span>
+            </div>
+          </Link>
 
-          {/* User Auth Section */}
-          {user ? (
-            /* User is logged in: Touch / Click on Name opens Dashboard & Logout Dropdown */
-            <div ref={dropdownRef} style={{ position: 'relative', flexShrink: 0 }}>
-              <button
-                type="button"
-                className="nav-user-btn"
-                onClick={() => setUserDropdownOpen(prev => !prev)}
-                aria-expanded={userDropdownOpen}
-                aria-haspopup="true"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '5px 12px',
-                  borderRadius: '10px',
-                  background: userDropdownOpen 
-                    ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%)' 
-                    : 'var(--btn-secondary-bg)',
-                  border: userDropdownOpen 
-                    ? '1px solid var(--primary)' 
-                    : '1px solid var(--border-subtle)',
-                  cursor: 'pointer',
-                  color: 'var(--text-main)',
-                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                  whiteSpace: 'nowrap',
-                  boxShadow: userDropdownOpen ? '0 0 12px rgba(99, 102, 241, 0.3)' : 'none'
-                }}
-              >
-                <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{user.avatar || '👤'}</span>
-                <span className="nav-user-text" style={{ 
-                  fontSize: '0.85rem', 
-                  fontWeight: '700', 
-                  maxWidth: '140px', 
-                  overflow: 'hidden', 
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {user.name}
-                </span>
-                <ChevronDown 
-                  size={14} 
-                  color="var(--text-muted)" 
-                  style={{ 
-                    transition: 'transform 0.2s ease', 
-                    transform: userDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' 
-                  }} 
-                />
-              </button>
+          {/* Desktop Nav Links */}
+          <nav className="hidden xl:flex items-center gap-1 shrink-0">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
 
-              {/* Floating Glass Dropdown Menu on Touch / Click */}
-              {userDropdownOpen && (
-                <div 
-                  className="glass-panel dropdown-fade-in" 
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 'calc(100% + 8px)',
-                    minWidth: '260px',
-                    padding: '14px',
-                    borderRadius: '14px',
-                    boxShadow: '0 16px 36px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border-subtle)',
-                    zIndex: 100
-                  }}
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    isActive 
+                      ? 'text-white bg-blue-600/20 border border-blue-500/30' 
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                  }`}
                 >
-                  {/* User Profile Card Header */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    paddingBottom: '12px',
-                    borderBottom: '1px solid var(--border-subtle)',
-                    marginBottom: '10px'
-                  }}>
-                    <div style={{
-                      width: '38px',
-                      height: '38px',
-                      borderRadius: '10px',
-                      background: 'rgba(99, 102, 241, 0.15)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.3rem',
-                      flexShrink: 0
-                    }}>
-                      {user.avatar || '👤'}
-                    </div>
-                    <div style={{ overflow: 'hidden' }}>
-                      <div style={{ 
-                        fontSize: '0.9rem', 
-                        fontWeight: '800', 
-                        color: 'var(--text-main)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {user.name}
-                      </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        @{user.username}
-                      </div>
-                      <div style={{ 
-                        fontSize: '0.7rem', 
-                        fontWeight: '700', 
-                        color: 'var(--primary)',
-                        marginTop: '2px',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {user.committee || (user.role === 'admin' ? 'Central Committee' : 'Member')}
-                      </div>
-                    </div>
-                  </div>
+                  <Icon size={13} className={isActive ? 'text-blue-400' : 'text-slate-400'} />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-                  {/* Dropdown Action Items */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {/* Dashboard Button */}
+          {/* Right Action Suite */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* CTA Button: Register Now */}
+            <Link
+              href="/registration"
+              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-red-600 to-blue-700 hover:from-red-500 hover:to-blue-600 text-white shadow-md shadow-red-900/30 transition-all hover:scale-105"
+            >
+              <UserCheck size={14} />
+              <span className="hidden sm:inline">
+                {language === 'km' ? 'ចុះឈ្មោះចូលរួម' : language === 'zh' ? '参会注册' : 'Register Now'}
+              </span>
+              <span className="sm:hidden">
+                {language === 'km' ? 'ចុះឈ្មោះ' : language === 'zh' ? '注册' : 'Register'}
+              </span>
+            </Link>
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
+            {/* Dark / Light Mode Toggle */}
+            <button
+              onClick={() => {
+                setRippleKey(prev => prev + 1);
+                toggleTheme();
+              }}
+              className="theme-toggle-btn p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+              title={theme === 'dark' ? t('nav.lightMode', 'Light Mode') : t('nav.darkMode', 'Dark Mode')}
+              aria-label="Toggle Dark/Light Mode"
+            >
+              {mounted && theme === 'light' ? (
+                <Sun size={16} className="text-amber-400" />
+              ) : (
+                <Moon size={16} className="text-indigo-400" />
+              )}
+            </button>
+
+            {/* User Profile or Admin Link */}
+            {user ? (
+              <div ref={dropdownRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserDropdownOpen(prev => !prev)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+                >
+                  <span className="text-sm">{user.avatar || '👤'}</span>
+                  <span className="max-w-[80px] sm:max-w-[110px] truncate">{user.name}</span>
+                  <ChevronDown size={12} className="text-slate-400" />
+                </button>
+
+                {userDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 space-y-1">
+                    <div className="px-3 py-2 border-b border-slate-800">
+                      <div className="font-bold text-white text-xs truncate">{user.name}</div>
+                      <div className="text-[10px] text-slate-400 truncate">@{user.username}</div>
+                    </div>
                     <Link
                       href="/admin"
                       onClick={() => setUserDropdownOpen(false)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        background: 'rgba(99, 102, 241, 0.12)',
-                        border: '1px solid rgba(99, 102, 241, 0.25)',
-                        color: 'var(--primary)',
-                        fontWeight: '700',
-                        fontSize: '0.85rem',
-                        textDecoration: 'none',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.15s ease'
-                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-blue-400 hover:bg-blue-900/20 transition-colors"
                     >
-                      <LayoutDashboard size={16} style={{ flexShrink: 0 }} />
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span>{t('nav.admin', 'Open Dashboard')}</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: '500' }}>
-                          {language === 'km' ? 'គ្រប់គ្រងព្រឹត្តិការណ៍ គណៈកម្មការ & ការកំណត់' : language === 'zh' ? '管理活动、委员会与系统设置' : 'Manage events, members & settings'}
-                        </span>
-                      </div>
+                      <LayoutDashboard size={14} />
+                      <span>{t('nav.admin', 'Admin Dashboard')}</span>
                     </Link>
-
-                    {/* Submit Event Shortcut */}
-                    <Link
-                      href="/submit"
-                      onClick={() => setUserDropdownOpen(false)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '9px 12px',
-                        borderRadius: '8px',
-                        background: 'transparent',
-                        border: '1px solid transparent',
-                        color: 'var(--text-main)',
-                        fontWeight: '600',
-                        fontSize: '0.85rem',
-                        textDecoration: 'none',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <PlusCircle size={15} color="#06b6d4" style={{ flexShrink: 0 }} />
-                      <span>{t('nav.submitEvent', 'Submit Event Proposal')}</span>
-                    </Link>
-
-                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }} />
-
-                    {/* Logout Button */}
                     <button
-                      type="button"
                       onClick={handleLogout}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '9px 12px',
-                        borderRadius: '8px',
-                        background: 'rgba(239, 68, 68, 0.08)',
-                        border: '1px solid rgba(239, 68, 68, 0.2)',
-                        color: '#ef4444',
-                        fontWeight: '700',
-                        fontSize: '0.85rem',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.15s ease'
-                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-900/20 transition-colors text-left"
                     >
-                      <LogOut size={15} style={{ flexShrink: 0 }} />
+                      <LogOut size={14} />
                       <span>{t('nav.logout', 'Log Out')}</span>
                     </button>
                   </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* User is not logged in: Single-line Sign In Button */
-            <Link
-              href="/login"
-              className="btn btn-primary btn-sm nav-signin-btn"
-              style={{ 
-                fontWeight: '700', 
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px'
-              }}
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+              >
+                <LogIn size={13} />
+                <span>{t('nav.signIn', 'Sign In')}</span>
+              </Link>
+            )}
+
+            {/* Mobile Menu Hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(prev => !prev)}
+              className="xl:hidden p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition-colors"
+              aria-label="Open mobile menu"
             >
-              <LogIn size={14} style={{ flexShrink: 0 }} />
-              <span className="nav-signin-text">{t('nav.signIn', 'Sign In')}</span>
-            </Link>
-          )}
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="xl:hidden border-t border-slate-800 bg-[#060911]/95 px-4 pt-3 pb-6 space-y-2 backdrop-blur-2xl">
+          <div className="grid grid-cols-2 gap-2">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    isActive 
+                      ? 'text-white bg-blue-600/20 border border-blue-500/30' 
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  }`}
+                >
+                  <Icon size={14} className={isActive ? 'text-blue-400' : 'text-slate-400'} />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+            <Link
+              href="/registration"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-center py-2.5 rounded-lg bg-gradient-to-r from-red-600 to-blue-700 text-white font-bold text-xs uppercase tracking-wider"
+            >
+              {language === 'km' ? 'ចុះឈ្មោះចូលរួម (Register Now)' : language === 'zh' ? '立即在线注册 (Register)' : 'Register for Expo 2026'}
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

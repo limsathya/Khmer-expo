@@ -12,13 +12,20 @@ import {
   Shield, 
   Sparkles, 
   Database, 
-  MapPin,
+  MapPin, 
   ChevronLeft, 
   ChevronRight, 
-  ExternalLink,
-  ShieldCheck,
-  CheckCircle2,
-  X
+  ExternalLink, 
+  ShieldCheck, 
+  CheckCircle2, 
+  X,
+  QrCode,
+  Building2,
+  Award,
+  CheckSquare,
+  FileText,
+  BarChart3,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function AdminSidebar({
@@ -41,63 +48,132 @@ export default function AdminSidebar({
 }) {
   const navGroups = [
     {
-      groupTitle: language === 'km' ? 'ប្រតិបត្តិការ' : language === 'zh' ? '展会运营' : 'Operations',
+      groupTitle: 'OVERVIEW',
+      items: [
+        {
+          key: 'events',
+          label: language === 'km' ? 'ផ្ទាំងគ្រប់គ្រង (Dashboard)' : language === 'zh' ? '总览看板 (Dashboard)' : 'Overview Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
+    {
+      groupTitle: 'EVENT',
       items: [
         { 
-          key: 'events', 
-          label: language === 'km' ? 'ព្រឹត្តិការណ៍ & សំណើ' : language === 'zh' ? '活动与提案' : 'Events & Proposals', 
-          icon: Layers, 
-          count: eventsCount 
+          key: 'registrations', 
+          label: language === 'km' ? 'ការចុះឈ្មោះ (Registrations)' : language === 'zh' ? '参会注册 (Registrations)' : 'Registrations', 
+          icon: Users 
+        },
+        { 
+          key: 'exhibitors', 
+          label: language === 'km' ? 'អ្នកតាំងពិព័រណ៍ (Exhibitors)' : language === 'zh' ? '参展商 (Exhibitors)' : 'Exhibitors', 
+          icon: Building2 
+        },
+        { 
+          key: 'booths', 
+          label: language === 'km' ? 'ប្លង់ស្តង់ពិព័រណ៍ (Booths Map)' : language === 'zh' ? '展位平面图 (Booths)' : 'Booths Floor Map', 
+          icon: MapPin 
+        },
+        { 
+          key: 'program', 
+          label: language === 'km' ? 'កម្មវិធី & កាលវិភាគ' : language === 'zh' ? '活动日程 (Program)' : 'Program & Schedule', 
+          icon: Calendar 
+        },
+        { 
+          key: 'speakers', 
+          label: language === 'km' ? 'វាគ្មិនកិត្តិយស' : language === 'zh' ? '主讲嘉宾 (Speakers)' : 'Speakers & Guests', 
+          icon: Award 
+        },
+        { 
+          key: 'vip', 
+          label: language === 'km' ? 'គណៈប្រតិភូ VIP' : language === 'zh' ? 'VIP贵宾 (VIP)' : 'VIP & Guests', 
+          icon: ShieldCheck 
+        },
+      ]
+    },
+    {
+      groupTitle: 'ORGANIZATION',
+      items: [
+        { 
+          key: 'committees', 
+          label: language === 'km' ? 'គណៈកម្មការរៀបចំ' : language === 'zh' ? '组委会架构' : 'Organizing Committee', 
+          icon: Building, 
+          count: committeesCount 
+        },
+        { 
+          key: 'subcommittees', 
+          label: language === 'km' ? 'អនុគណៈកម្មការទាំង១៣' : language === 'zh' ? '13个工作分会' : 'Sub-Committees', 
+          icon: Layers 
+        },
+        { 
+          key: 'tasks', 
+          label: language === 'km' ? 'កិច្ចការងារ Kanban' : language === 'zh' ? '看板任务 (Tasks)' : 'Tasks (Kanban)', 
+          icon: CheckSquare 
+        },
+        { 
+          key: 'members', 
+          label: language === 'km' ? 'បញ្ជីសមាជិក Roster' : language === 'zh' ? '正式成员名册' : 'Members Roster', 
+          icon: Users 
+        },
+        { 
+          key: 'invites', 
+          label: language === 'km' ? 'កូដផ្ទៀងផ្ទាត់សមាជិក' : language === 'zh' ? '入会邀请与验证' : 'Codes & Approvals', 
+          icon: Key 
+        },
+      ]
+    },
+    {
+      groupTitle: 'OPERATIONS',
+      items: [
+        { 
+          key: 'checkin', 
+          label: language === 'km' ? 'ស្កេន QR Check-in' : language === 'zh' ? '现场核销签到' : 'QR Check-in', 
+          icon: QrCode 
+        },
+        { 
+          key: 'sponsors', 
+          label: language === 'km' ? 'ដៃគូឧបត្ថម្ភ (Sponsors)' : language === 'zh' ? '赞助商合作' : 'Sponsors & Partners', 
+          icon: Award 
+        },
+        { 
+          key: 'news', 
+          label: language === 'km' ? 'ព័ត៌មាន & សេចក្តីជូនដំណឹង' : language === 'zh' ? '新闻与动态' : 'News & Releases', 
+          icon: FileText 
         },
         { 
           key: 'categories', 
-          label: language === 'km' ? 'ប្រភេទព្រឹត្តិការណ៍' : language === 'zh' ? '分类管理' : 'Categories', 
+          label: language === 'km' ? 'ប្រភេទព្រឹត្តិការណ៍' : language === 'zh' ? '展会分类' : 'Categories', 
           icon: Tag, 
           count: categoriesCount 
         },
         { 
-          key: 'timeline', 
-          label: language === 'km' ? 'កាលវិភាគ Timeline' : language === 'zh' ? '时间线日程' : 'Timeline Schedule', 
-          icon: Calendar 
-        },
-        { 
           key: 'zones', 
-          label: language === 'km' ? 'ទីតាំង & សាលពិព័រណ៍' : language === 'zh' ? '展区与展厅' : 'Zones & Halls', 
+          label: language === 'km' ? 'សាល & ទីតាំងស្តង់' : language === 'zh' ? '展区展厅管理' : 'Zones & Halls', 
           icon: MapPin, 
           count: zonesCount 
         },
       ]
     },
     {
-      groupTitle: language === 'km' ? 'គណៈកម្មការ & សិទ្ធិ' : language === 'zh' ? '委员会与成员' : 'Personnel & Roster',
+      groupTitle: 'ANALYTICS',
       items: [
         { 
-          key: 'invites', 
-          label: language === 'km' ? 'កូដផ្ទៀងផ្ទាត់ & អនុម័ត' : language === 'zh' ? '验证码与审批' : 'Codes & Approvals', 
-          icon: Key 
-        },
-        { 
-          key: 'members', 
-          label: language === 'km' ? 'បញ្ជីសមាជិក' : language === 'zh' ? '成员名册' : 'Members Roster', 
-          icon: Users 
-        },
-        { 
-          key: 'committees', 
-          label: language === 'km' ? 'រចនាសម្ព័ន្ធគណៈកម្មការ' : language === 'zh' ? '委员会架构' : 'Committees Setup', 
-          icon: Building, 
-          count: committeesCount 
-        },
-        { 
-          key: 'users', 
-          label: language === 'km' ? 'គណនីអ្នកប្រើប្រាស់' : language === 'zh' ? '系统用户' : 'User Accounts', 
-          icon: Shield, 
-          count: usersCount 
+          key: 'reports', 
+          label: language === 'km' ? 'របាយការណ៍ & ទិន្នន័យ CSV' : language === 'zh' ? '数据统计与导出' : 'Reports & Analytics', 
+          icon: BarChart3 
         },
       ]
     },
     {
-      groupTitle: language === 'km' ? 'ការកំណត់ប្រព័ន្ធ' : language === 'zh' ? '系统与设置' : 'System Settings',
+      groupTitle: 'SYSTEM',
       items: [
+        { 
+          key: 'users', 
+          label: language === 'km' ? 'គណនីអ្នកប្រើប្រាស់' : language === 'zh' ? '系统用户与角色' : 'User Accounts (RBAC)', 
+          icon: Shield, 
+          count: usersCount 
+        },
         { 
           key: 'identity', 
           label: language === 'km' ? 'អត្តសញ្ញាណ & ឡូហ្គោ' : language === 'zh' ? '品牌与标识' : 'Identity & Logo', 
@@ -105,7 +181,7 @@ export default function AdminSidebar({
         },
         { 
           key: 'database', 
-          label: language === 'km' ? 'មូលដ្ឋានទិន្នន័យ' : language === 'zh' ? '数据库系统' : 'Database & Status', 
+          label: language === 'km' ? 'មូលដ្ឋានទិន្នន័យ Supabase' : language === 'zh' ? '数据库状态' : 'Database Status', 
           icon: Database,
           statusDot: dbConnected ? '#10b981' : '#f59e0b'
         },
