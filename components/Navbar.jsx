@@ -139,7 +139,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden xl:flex items-center gap-1 shrink-0">
+          <nav className="hidden xl:flex nav-menu shrink-0">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
@@ -148,14 +148,14 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`nav-link ${
                     isActive 
                       ? 'text-white bg-blue-600/20 border border-blue-500/30' 
                       : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
                   }`}
                 >
-                  <Icon size={13} className={isActive ? 'text-blue-400' : 'text-slate-400'} />
-                  <span>{link.label}</span>
+                  <Icon size={13} className={`self-center shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                  <span className="leading-none">{link.label}</span>
                 </Link>
               );
             })}
@@ -166,14 +166,14 @@ export default function Navbar() {
             {/* CTA Button: Register Now */}
             <Link
               href="/registration"
-              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-red-600 to-blue-700 hover:from-red-500 hover:to-blue-600 text-white shadow-md shadow-red-900/30 transition-all hover:scale-105"
+              className="btn-register"
             >
-              <UserCheck size={14} />
+              <UserCheck size={14} className="shrink-0" />
               <span className="hidden sm:inline">
-                {language === 'km' ? 'ចុះឈ្មោះចូលរួម' : language === 'zh' ? '参会注册' : 'Register Now'}
+                {language === 'km' ? 'ចុះឈ្មោះចូលរួម' : language === 'zh' ? '参会注册' : 'REGISTER NOW'}
               </span>
               <span className="sm:hidden">
-                {language === 'km' ? 'ចុះឈ្មោះ' : language === 'zh' ? '注册' : 'Register'}
+                {language === 'km' ? 'ចុះឈ្មោះ' : language === 'zh' ? '注册' : 'REGISTER'}
               </span>
             </Link>
 
